@@ -19,11 +19,17 @@ import { StatusStrip } from './components/StatusStrip'
 import { SummaryPanel } from './components/SummaryPanel'
 import { TracePanel } from './components/TracePanel'
 import { InversePage } from './components/inverse/InversePage'
+import { ForwardPage } from './components/forward/ForwardPage'
 import { fixed } from './lib/format'
 
-function useRoute(): 'traces' | 'inverse' {
-  const read = () => (window.location.hash.replace('#', '') === 'inverse' ? 'inverse' : 'traces')
-  const [route, setRoute] = useState<'traces' | 'inverse'>(read)
+type Route = 'traces' | 'inverse' | 'forward'
+
+function useRoute(): Route {
+  const read = (): Route => {
+    const h = window.location.hash.replace('#', '')
+    return h === 'inverse' || h === 'forward' ? h : 'traces'
+  }
+  const [route, setRoute] = useState<Route>(read)
   useEffect(() => {
     const onHash = () => {
       setRoute(read())
@@ -46,8 +52,11 @@ export function App() {
         <a className={`nav__link ${route === 'inverse' ? 'is-on' : ''}`} href="#inverse">
           <span className="nav__index">v2</span> Inverse problem
         </a>
+        <a className={`nav__link ${route === 'forward' ? 'is-on' : ''}`} href="#forward">
+          <span className="nav__index">v3</span> Forward model
+        </a>
       </nav>
-      {route === 'inverse' ? <InversePage /> : <TracesPage />}
+      {route === 'inverse' ? <InversePage /> : route === 'forward' ? <ForwardPage /> : <TracesPage />}
     </main>
   )
 }

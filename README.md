@@ -12,7 +12,12 @@ likelihoods, bootstrap, synthetic recovery and a comparison with the paper's
 Table 1. Open `#inverse` in the app, or `python -m tini inverse`. The
 formulation, its limits and the results are in `docs/INVERSE_PROBLEM.md`.
 
-Not in this version: the Smoluchowski dynamics (Version 3).
+**Version 3: the forward Smoluchowski model.** The paper's Fokker–Planck
+equation integrated on the cubic landscape under the force ramp (finite
+volume, Scharfetter–Gummel, backward Euler), with conservation and positivity
+by construction, an exact first-passage benchmark, grid/time convergence, and
+the critical-force density compared with Eq. (6) and the measured sample.
+Open `#forward`, or `python -m tini forward`. See `docs/FORWARD_MODEL.md`.
 
 ## Layout
 
@@ -28,8 +33,9 @@ backend/tini/        FastAPI + NumPy pipeline
   progress.py        progress.json: stage, files, %, elapsed, ETA, last checkpoint
   io_atomic.py       write-to-temp + os.replace; previous copy kept as .prev
   api.py             the endpoints
-backend/tini/inverse/ Version 2: forward model, likelihood, fit, uncertainty, diagnostics, runs
-backend/tests/       61 tests: physics identities, validation, resume, inference recovery
+backend/tini/inverse/ Version 2: analytic model, likelihood, fit, uncertainty, diagnostics, runs
+backend/tini/forward/ Version 3: Smoluchowski solver, validation battery, runs
+backend/tests/       86 tests: physics identities, solver benchmarks, validation, resume, inference recovery
 frontend/            Vite + React + TypeScript, Recharts, KaTeX (light theme only)
 data/raw/Force_traces/   the 100 .dat files (3.9 MB)
 artifacts/           everything the pipeline writes (see below)

@@ -306,6 +306,7 @@ class ForwardRun:
         fdot = sol.force_rate
         lk = LandscapeKinetics(p.U_barrier, p.xi_barrier, p.gamma0, p.kBT)
         f = fd["f_pN"]
+        stride = max(1, sol.snapshots.shape[0] // 40)
         p6 = lk.pdf(f, fdot)
         cdf6 = lk.cdf(f, fdot)
         m6 = lk.moments_exact(fdot)
@@ -317,8 +318,8 @@ class ForwardRun:
             "eq6": {"mean_pN": m6["mean"], "sd_pN": m6["sd"], "residual_mass": m6["residual_mass"], "mean_eq8_pN": lk.mean_eq8(fdot)},
             "l1_pde_vs_eq6": float(np.trapezoid(np.abs(fd["pdf"] - p6), f)),
             "max_cdf_diff_pde_vs_eq6": float(np.max(np.abs(fd["cdf"] - cdf6))),
-            "snapshots": {"t_ps": [float(v) for v in sol.snapshot_t], "f_pN": [float(v * fdot) for v in sol.snapshot_t], "xi_A": _display(sol.grid.centers, 250), "P": [_display(row, 250) for row in sol.snapshots[:: max(1, sol.snapshots.shape[0] // 40)]]},
-            "snapshot_stride": max(1, sol.snapshots.shape[0] // 40),
+            "snapshots": {"t_ps": [float(v) for v in sol.snapshot_t[::stride]], "f_pN": [float(v * fdot) for v in sol.snapshot_t[::stride]], "xi_A": _display(sol.grid.centers, 250), "P": [_display(row, 250) for row in sol.snapshots[::stride]]},
+            "snapshot_stride": stride,
         }
         # comparison with the V1 sample (forward prediction against measured critical forces)
         try:

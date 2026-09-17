@@ -135,3 +135,55 @@ CPU only.
   the same; bootstrap draws that hit the U‡ bound are reported as a fraction
   rather than clipped; no multi-rate data exist to attempt the paper's
   method (B).
+
+
+---
+
+# Version 3 — forward Smoluchowski model (2026-09-17)
+
+## Stage 1 — audit
+* η's unit: the paper's Kramers prefactor fixes it as pN·ps/Å; V2's label
+  `eta_per_ps` corrected to `eta_pN_ps_per_A` (value unchanged).
+* The forward model has no parameter beyond V2's: η follows from Γ₀.
+* Time scales: well relaxation 0.1 ps vs escape at 30–10 000 ps → implicit
+  integration required (explicit limit 2×10⁻⁴ ps).
+* The absorbing-boundary placement is the sensitive modelling choice
+  (Kramers vs recrossing); both placements implemented.
+
+## Stage 2 — specification
+* `docs/FORWARD_MODEL.md` §1–6: equation, units, domain, boundaries, initial
+  state, the five observables kept distinct, scheme choice, validation plan.
+
+## Stage 3 — solver
+* Finite volume, Scharfetter–Gummel fluxes, backward Euler (θ-scheme for
+  study), exact discrete conservation (absorbed mass = boundary flux), M-matrix
+  positivity, analytic exact-MFPT benchmark. 1.4 s per 250 × 20 000 run.
+
+## Stage 4 — validation
+* 18 tests: identities to machine precision, exact MFPT to 0.1 %, grid order
+  2.00, time order 1.00, Kramers factor 0.965 and recrossing factor 1.79,
+  bitwise reproducibility. One benchmark corrected (well-confined initial
+  density).
+
+## Stage 5 — backend integration
+* `tini/forward/runs.py`: resumable per-phase runs, parameter sources
+  (paper / V2 latest or specific run / custom), force rate, temperature,
+  solver settings; `/api/forward/*`; `tini forward`. 7 tests. 86 total.
+* Atomic writer now retries `os.replace` on Windows sharing violations
+  (OneDrive/reader contention seen once during a run).
+
+## Stage 6 — forward predictions
+* Table in FORWARD_MODEL.md §8: PDE vs Eq. 6 within 0.2–0.3 pN for every
+  parameter set; spectrum gap grows with rate; Table 1 parameters rejected by
+  the sample (KS D 0.21–0.24), consistent with V2.
+
+## Stage 7–8 — frontend and end-to-end
+* `#forward` route, sections A–G; run from the UI, live progress, run
+  history. Two frontend bugs found in the browser and fixed at the source
+  (snapshot stride mismatch in `observables.json`; overlaid line x-key).
+* API run verified: background thread, progress, latest pointer, 5 runs listed.
+
+## Stage 9–10 — documentation, review
+* 86 tests, `tsc -b`, `vite build` clean. Committed.
+* Open: moving absorbing boundary; second-order time stepping with
+  positivity (e.g. TR-BDF2); no multi-rate data to fit the PDE directly.

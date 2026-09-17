@@ -1,0 +1,80 @@
+{
+  "A_B_conservation_positivity": {
+    "conservation_error_max": 1.6897594434794883e-13,
+    "min_density": 0.0,
+    "final_survival": 3.344193947903188e-19,
+    "final_absorbed": 1.0000000000001277
+  },
+  "C1_reflecting_equilibrium": {
+    "l1_drift": 5.974465897656703e-15,
+    "mass_error": 3.552713678800501e-15,
+    "t_end_ps": 50.0
+  },
+  "C2_mfpt_exact": [
+    {
+      "force_pN": 19.668698630136987,
+      "barrier_remaining_kBT": 3.8976372533204313,
+      "tau_exact_ps": 43.58830760276262,
+      "tau_pde_ps": 43.63240840317908,
+      "relative_error": 0.0010117575754114297,
+      "survival_at_horizon": 8.218808974928377e-07,
+      "n_cells": 300,
+      "n_steps": 6000,
+      "dt_ps": 0.10170605107311279
+    },
+    {
+      "force_pN": 19.668698630136987,
+      "barrier_remaining_kBT": 3.8976372533204313,
+      "tau_exact_ps": 41.33672591708554,
+      "tau_pde_ps": 41.37654982988983,
+      "relative_error": 0.0009634026866127364,
+      "survival_at_horizon": 8.460219119502256e-07,
+      "n_cells": 300,
+      "n_steps": 6000,
+      "dt_ps": 0.09645236047319959
+    }
+  ],
+  "C3_free_diffusion": {
+    "variance_pde_A2": 463.2440835856793,
+    "variance_exact_A2": 463.2440900448371,
+    "relative_error": 1.3943314022596927e-08,
+    "mass_error": 1.8696155734687636e-13
+  },
+  "F_kramers": {
+    "force_pN": 9.834349315068494,
+    "barrier_remaining_kBT": 9.023156513898378,
+    "gamma_eq4_per_ps": 0.00019615966862244534,
+    "xi_ts_A": 26.8152363873975,
+    "placements": [
+      {
+        "placement": "transition_state",
+        "xi_A_A": 26.8152363873975,
+        "rate_pde_per_ps": 0.00035131651835787546,
+        "ratio_pde_over_eq4": 1.7909722259679455,
+        "mfpt_exact_ps": 2843.2991095371153,
+        "ratio_1_over_mfpt_over_eq4": 1.7929481555764375
+      },
+      {
+        "placement": "barrier_top",
+        "xi_A_A": 29.2,
+        "rate_pde_per_ps": 0.0002375731388713834,
+        "ratio_pde_over_eq4": 1.2111212286387365,
+        "mfpt_exact_ps": 4206.450735890318,
+        "ratio_1_over_mfpt_over_eq4": 1.2119214545175703
+      },
+      {
+        "placement": "beyond_barrier",
+        "xi_A_A": 37.1132,
+        "rate_pde_per_ps": 0.00018930254277810344,
+        "ratio_pde_over_eq4": 0.9650431411691461,
+        "mfpt_exact_ps": 5280.492048708241,
+        "ratio_1_over_mfpt_over_eq4": 0.9654191024572771
+      }
+    ]
+  },
+  "G_reproducibility": {
+    "identical_survival": true,
+    "identical_snapshots": true,
+    "max_abs_diff": 0.0
+  }
+}

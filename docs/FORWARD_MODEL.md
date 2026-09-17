@@ -1,7 +1,9 @@
 # Version 3 — forward Smoluchowski model
 
-Status: specification (Stage 2), then implementation notes and validation
-results appended as the stages complete.
+Status: **implemented and validated** (Stages 2–8, 2026-09-17). §7 holds the
+validation results, §8 the forward predictions. Solver:
+`backend/tini/forward/solver.py`; validation: `validation.py`; runs:
+`runs.py`; API `/api/forward/*`; page `#forward`.
 
 Source: Maitra & Gururajan, Sci. Rep. 15:3008 (2025), *Results — Quantitative
 description of phase transition linked force distribution*: the
@@ -88,8 +90,8 @@ state), and Ψ(t) = ∫_{−∞}^{ξ‡} P dξ.
    crosses the moving barrier top slides to ξ_A and is absorbed a short
    transit later; it cannot return uphill against a strong drift, so the
    survival probability is only delayed, not changed in mass.
-2. A density absorbed *at* a barrier top escapes at **twice** the Kramers
-   rate: Kramers' flux-over-barrier counts only the half that does not
+2. A density absorbed *at* a barrier top escapes at up to **twice** the Kramers
+   rate (1.8× measured at a 9 k_BT barrier, §7): Kramers' flux-over-barrier counts only the half that does not
    recross (Hänggi et al. 1990 §IV). The paper combines the barrier-top
    absorbing boundary with the Kramers rate; the two are inconsistent by a
    factor 2 in Γ, i.e. ln 2 ≈ 0.69 in ln Γ₀. V2's Γ₀ interval spans two
@@ -102,9 +104,11 @@ state), and Ψ(t) = ∫_{−∞}^{ξ‡} P dξ.
      where recrossing is negligible and the escape rate is Kramers'.
 
 **Initial condition.** The paper's traces start from equilibrium at zero
-force, so P(ξ,0) = e^{−βU₀(ξ)} / ∫ e^{−βU₀} dξ over the domain. (With P = 0
+force, so P(ξ,0) ∝ e^{−βU₀(ξ)} on the well, ξ ≤ ξ_TS(0) = ξ‡, and zero
+beyond it (the downhill region past the barrier that a `beyond_barrier`
+domain also contains is not part of the austenite state). With P = 0
 imposed at ξ_A this is not exactly stationary, but at U‡ ≈ 15 k_BT the
-difference is < 10⁻⁶ in mass.)
+difference is < 10⁻⁶ in mass.
 
 ## 4. Observables — five different things, kept apart
 
@@ -183,6 +187,79 @@ positivity properties inside an adaptive integrator).
 There is no closed-form solution for the ramped problem itself; the evidence
 for it is C2 (exact at fixed force), D–E (convergence) and F–H (limits).
 
-## 7. Results
+## 7. Validation results (Table 1 col. 1 parameters unless stated)
 
-(appended after Stage 4 and Stage 6)
+| test | result | metric |
+| --- | --- | --- |
+| A conservation | Ψ + absorbed = 1 at every step | max deviation 8×10⁻¹⁴ (250 cells × 20 000 steps) |
+| B positivity | no negative cell, no clipping | min P̄ = 7×10⁻³⁸ /Å |
+| C1 equilibrium | Boltzmann density stationary, both walls reflecting, 50 ps | L1 drift 6×10⁻¹⁵ |
+| C2 exact MFPT | fixed f = 0.6 f_c (3.9 k_BT barrier), from the well-confined Boltzmann start | 43.63 vs 43.59 ps exact, 0.10 %; also 0.09 % at the ξ‡ placement, 0.10 % at 0.5 f_c (5.5 k_BT), 0.12 % at 0.7 f_c (2.5 k_BT) |
+| C3 diffusion | U ≡ 0, variance = 2Dt | relative error 1.4×10⁻⁸ |
+| D grid | h → h/2 → h/4 → h/8, ⟨f‡⟩ change 0.0028, 0.0007, 0.0002 pN | observed order 2.00 |
+| E time | Δt → Δt/2 → Δt/4 → Δt/8, ⟨f‡⟩ change −0.0017, −0.0009, −0.0004 pN | observed order 1.00; Richardson error at 20 000 steps 4×10⁻⁴ pN |
+| F Kramers, f = 0.3 f_c (9.0 k_BT) | Γ_PDE/Γ_Eq.4 | absorbing beyond: **0.965**; at ξ‡: 1.21; on the transition state: **1.79** (recrossing, → 2) |
+| F Kramers, f = 0.6 f_c (3.9 k_BT) | Γ_PDE/Γ_Eq.4 | beyond 0.92; at ξ‡ 0.97; on the TS 1.65 |
+| G reproducibility | two runs | bitwise identical |
+| H physics | p ≥ 0; ∫p + ψ(f_c) = 1.000012; ⟨f‡⟩ increases with ḟ | true |
+
+Reading of F: the paper's rate law Eq. (4) is what the PDE gives when the
+density is absorbed *beyond* the barrier; absorbing on the transition state
+itself escapes faster by the recrossing factor. The paper's literal
+"absorbing at the barrier position" (ξ‡) is nevertheless within 3 % of
+Kramers at the forces where transitions actually occur, because by then the
+transition state has moved inside ξ‡ and the boundary is already downhill.
+
+A benchmark note: the first version of the C2 test initialised with the
+Boltzmann density over the whole domain, which for a domain extending past
+the barrier puts most of the mass beyond it; the test was wrong, not the
+solver. The physical initial state is the well, and both the PDE and the
+exact formula now use the well-confined density.
+
+## 8. Forward predictions at ḟ = 0.0943 pN/ps (rate (v))
+
+| parameters | boundary | PDE ⟨f‡⟩, s.d. | Eq. 6 ⟨f‡⟩, s.d. | L1(p_PDE, p_Eq6) | max ΔCDF | sample ln L: PDE / Eq. 6 | KS D |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| V2 MLE (539, 25.6, 2.5×10⁻⁶) | beyond | 18.76, 3.15 | 18.52, 3.10 | 0.074 | 0.037 | −251.3 / −250.9 | 0.095 (descriptive: fitted to this sample) |
+| V2 MLE | at ξ‡ | 18.46, 3.24 | 18.52, 3.10 | 0.040 | 0.012 | −251.0 / −250.9 | 0.063 (descriptive) |
+| Table 1 col. 1 | beyond | 19.89, 2.82 | 19.69, 2.78 | 0.067 | 0.033 | −261.9 / −259.1 | 0.212 (valid; 5 % critical 0.136) |
+| Table 1 col. 2 | beyond | 20.18, 2.69 | 19.92, 2.72 | 0.104 | 0.050 | −267.9 / −263.1 | 0.241 (valid) |
+
+Force spectrum (V2 MLE, beyond): PDE − Eq. 6 exact mean = +0.09, +0.11,
++0.13, +0.17, +0.24, +0.35, +0.41 pN at rates (i)–(vii); residual mass
+ψ(f_c) rises from 10⁻³⁰⁶ to 7 % at rate (vii).
+
+**What this establishes.**
+
+1. The paper's closed form, Eq. (6), is the Kramers/steady-flux
+   approximation to its own Smoluchowski equation, and that approximation is
+   good to 0.2–0.3 pN in the mean (≈ 1 %), ≤ 5 % in the CDF, for every
+   parameter set examined. The discrepancy grows with loading rate — the
+   transit past the barrier that a steady-flux picture neglects — and with
+   it the residual mass at f_c.
+2. With Version 2's parameters the PDE describes the measured sample as well
+   as Eq. (6) does (Δ ln L = 0.4 at n = 100). This is expected — those
+   parameters were fitted to this sample through Eq. (6) — and it is a test
+   of the approximation chain, not of the physics.
+3. With the paper's Table 1 parameters the PDE, like Eq. (6), is rejected by
+   this sample (KS D = 0.21–0.24 against a critical 0.136). As in Version 2,
+   the gap is the size of the Version 1 peak-picker bias; the forward model
+   does not change that conclusion and cannot be used to claim agreement.
+4. Nothing here identifies η independently: it is set by Γ₀ through the
+   paper's Kramers formula, so the forward model has no free parameter of
+   its own. Different (U‡, ξ‡, Γ₀) along Version 2's ridge give nearly the
+   same p(f | ḟ) here too — the non-identifiability of V2 carries over.
+
+## 9. Limitations
+
+* One reaction coordinate, overdamped, with the paper's cubic; no
+  inertial term, no coordinate-dependent friction, no coupling to the box.
+* The absorbing boundary is fixed in ξ; a moving boundary on ξ_TS(f) is not
+  implemented (its fixed-force effect is quantified in F).
+* Backward Euler is first order in time; the Richardson estimate (4×10⁻⁴ pN
+  at the default 20 000 steps) is reported with every run, and the
+  Crank–Nicolson option exists for study only because it does not preserve
+  positivity.
+* Temperature other than 300 K is supported by holding η fixed and
+  rescaling Γ₀ by Kramers — an assumption beyond the paper, labelled as such
+  in the run record.

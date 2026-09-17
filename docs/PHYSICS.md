@@ -138,3 +138,13 @@ A hand cross-check that is *not* implemented: with the Table 1 (MLE) values
 and ḟ = 0.0943, the paper's Eq. (8) gives ⟨f‡⟩ ≈ 19.5 pN; the prototype
 picker here gives 18.5 (ḟ·t‡) to 20.4 (smoothed peak). Consistent, but this
 is Version 2 material and not shown in the app.
+
+## 7. Later versions
+
+* Version 2 (`docs/INVERSE_PROBLEM.md`): the critical-force PDF Eq. (6),
+  its likelihood, and what a single-rate sample can and cannot determine.
+* Version 3 (`docs/FORWARD_MODEL.md`): the Smoluchowski equation itself,
+  solved numerically; Eq. (6) is shown to be its Kramers approximation to
+  ≈ 1 % in the mean. One correction: η in the paper's Γ₀ prefactor is a
+  friction coefficient in pN·ps/Å (force per velocity), not an inverse
+  time; D = k_BT/η.

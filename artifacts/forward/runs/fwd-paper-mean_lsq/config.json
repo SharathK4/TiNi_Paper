@@ -1,0 +1,65 @@
+{
+  "run_id": "fwd-paper-mean_lsq",
+  "config": {
+    "parameter_source": "paper:mean_lsq",
+    "inverse_run_id": null,
+    "custom": {},
+    "force_rate": null,
+    "temperature_K": 300.0,
+    "n_cells": 250,
+    "n_steps": 20000,
+    "theta": 1.0,
+    "boundary": "beyond_barrier",
+    "margin_kBT": 4.0,
+    "xi_left_factor": 0.6,
+    "n_snapshots": 80,
+    "validation_enabled": true,
+    "convergence_enabled": true,
+    "spectrum_enabled": true,
+    "compare_source": "rate_x_time",
+    "model_version": "smoluchowski-fv-sg-be-1"
+  },
+  "model_version": "smoluchowski-fv-sg-be-1",
+  "code_hash": "3318de5834b6",
+  "parameters": {
+    "U_barrier_pN_A": 659.0,
+    "xi_barrier_A": 36.1,
+    "gamma0_per_ps": 6.12e-08,
+    "kBT_pN_A": 41.41947,
+    "f_c_pN": 27.382271468144044,
+    "U_barrier_kBT": 15.910391900234359,
+    "curvature_pN_per_A": 3.0340467000713622,
+    "eta_pN_ps_per_A": 0.971170682356327,
+    "D_A2_per_ps": 42.64901191158796,
+    "tau_well_ps": 0.32009088137420055,
+    "tau_diffusion_ps": 30.556628198129744
+  },
+  "parameter_provenance": {
+    "source": "paper:mean_lsq",
+    "label": "Table 1 \u00b7 fit of \u27e8f\u27e9(\u1e1f), Eq. (8), least squares"
+  },
+  "force_rate_pN_per_ps": 0.09434118803329211,
+  "force_rate_provenance": {
+    "source": "v1",
+    "window_ps": 100.0,
+    "se": 0.0012574218345341864
+  },
+  "grid": {
+    "xi_L_A": -21.66,
+    "xi_A_A": 45.729675,
+    "n_cells": 250,
+    "h_A": 0.2695587
+  },
+  "boundary": {
+    "boundary": "beyond_barrier",
+    "xi_A_A": 45.729675,
+    "U0_at_xi_A_pN_A": 493.3088293182187,
+    "margin_kBT": 4.0,
+    "xi_L_A": -21.66,
+    "U0_at_xi_L_kBT": 24.05651255315435
+  },
+  "t_end_ps": 290.24726144513994,
+  "dt_ps": 0.014512363072256998,
+  "created_at": 1789666348.6129804,
+  "created_at_iso": "2026-09-17T23:02:28"
+}

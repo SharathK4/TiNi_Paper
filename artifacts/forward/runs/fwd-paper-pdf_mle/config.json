@@ -1,0 +1,65 @@
+{
+  "run_id": "fwd-paper-pdf_mle",
+  "config": {
+    "parameter_source": "paper:pdf_mle",
+    "inverse_run_id": null,
+    "custom": {},
+    "force_rate": null,
+    "temperature_K": 300.0,
+    "n_cells": 250,
+    "n_steps": 20000,
+    "theta": 1.0,
+    "boundary": "beyond_barrier",
+    "margin_kBT": 4.0,
+    "xi_left_factor": 0.6,
+    "n_snapshots": 80,
+    "validation_enabled": true,
+    "convergence_enabled": true,
+    "spectrum_enabled": true,
+    "compare_source": "rate_x_time",
+    "model_version": "smoluchowski-fv-sg-be-1"
+  },
+  "model_version": "smoluchowski-fv-sg-be-1",
+  "code_hash": "3318de5834b6",
+  "parameters": {
+    "U_barrier_pN_A": 638.14,
+    "xi_barrier_A": 29.2,
+    "gamma0_per_ps": 3.96e-07,
+    "kBT_pN_A": 41.41947,
+    "f_c_pN": 32.781164383561645,
+    "U_barrier_kBT": 15.40676401701905,
+    "curvature_pN_per_A": 4.490570463501595,
+    "eta_pN_ps_per_A": 0.3675816853202639,
+    "D_A2_per_ps": 112.68099487577119,
+    "tau_well_ps": 0.08185634504744774,
+    "tau_diffusion_ps": 7.56684834865028
+  },
+  "parameter_provenance": {
+    "source": "paper:pdf_mle",
+    "label": "Table 1 \u00b7 fit of p(f | \u1e1f), Eq. (6), maximum likelihood"
+  },
+  "force_rate_pN_per_ps": 0.09434118803329211,
+  "force_rate_provenance": {
+    "source": "v1",
+    "window_ps": 100.0,
+    "se": 0.0012574218345341864
+  },
+  "grid": {
+    "xi_L_A": -17.52,
+    "xi_A_A": 37.1132,
+    "n_cells": 250,
+    "h_A": 0.2185328
+  },
+  "boundary": {
+    "boundary": "beyond_barrier",
+    "xi_A_A": 37.1132,
+    "U0_at_xi_A_pN_A": 472.14190404092005,
+    "margin_kBT": 4.0,
+    "xi_L_A": -17.52,
+    "U0_at_xi_L_kBT": 23.29502719373279
+  },
+  "t_end_ps": 347.47457676697354,
+  "dt_ps": 0.017373728838348677,
+  "created_at": 1789666335.4369435,
+  "created_at_iso": "2026-09-17T23:02:15"
+}

@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+import time
 from pathlib import Path
 from typing import Any
 
@@ -24,14 +25,31 @@ def _tmp_path(target: Path) -> Path:
     return Path(tmp)
 
 
+_REPLACE_RETRIES = 40
+_REPLACE_SLEEP_S = 0.025
+
+
+def _replace_with_retry(src: Path, dst: Path) -> None:
+    """os.replace, retried on Windows sharing violations (a reader or a sync
+    client holding the target open for a few milliseconds)."""
+    for attempt in range(_REPLACE_RETRIES):
+        try:
+            os.replace(src, dst)
+            return
+        except PermissionError:
+            if attempt == _REPLACE_RETRIES - 1:
+                raise
+            time.sleep(_REPLACE_SLEEP_S)
+
+
 def _commit(tmp: Path, target: Path, keep_previous: bool) -> None:
     if keep_previous and target.exists():
         prev = target.with_name(target.name + ".prev")
         try:
-            os.replace(target, prev)
+            _replace_with_retry(target, prev)
         except OSError:
             pass
-    os.replace(tmp, target)
+    _replace_with_retry(tmp, target)
 
 
 def atomic_write_text(target: Path, text: str, keep_previous: bool = True) -> None:

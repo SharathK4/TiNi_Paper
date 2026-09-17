@@ -3,7 +3,7 @@
   "model_version": "smoluchowski-fv-sg-be-1",
   "code_hash": "24109c8452c6",
   "created_at_iso": "2026-09-17T22:59:26",
-  "completed_at_iso": "2026-09-17T22:59:37",
+  "completed_at_iso": "2026-09-17T23:08:28",
   "config": {
     "parameter_source": "inverse:latest",
     "inverse_run_id": null,
@@ -384,6 +384,7 @@
     "observables": "forward/runs/fwd-trial-01/observables.json",
     "validation": "forward/runs/fwd-trial-01/validation.json",
     "convergence": "forward/runs/fwd-trial-01/convergence.json",
-    "spectrum": "forward/runs/fwd-trial-01/spectrum.json"
+    "spectrum": "forward/runs/fwd-trial-01/spectrum.json",
+    "finalize": "forward/runs/fwd-trial-01/result.json"
   }
 }
