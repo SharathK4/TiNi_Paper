@@ -15,3 +15,4 @@ artifacts/inverse/runs/*/*.prev
 artifacts/forward/progress.json
 artifacts/forward/runs/*/*.prev
 artifacts/forward/runs/*/solution.npz
+artifacts/forward/errors.log
