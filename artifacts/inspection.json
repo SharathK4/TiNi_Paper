@@ -1,0 +1,653 @@
+{
+  "data_dir": "C:\\Users\\Sharath\\OneDrive\\Desktop\\TiNi_Paper\\data\\raw\\Force_traces",
+  "file_glob": "property.T300.*.dat",
+  "n_files": 100,
+  "max_files_setting": null,
+  "total_size_bytes": 3891900,
+  "total_size_mb": 3.892,
+  "size_bytes_min": 38919,
+  "size_bytes_max": 38919,
+  "first_file": "property.T300.00001.dat",
+  "last_file": "property.T300.00100.dat",
+  "header_lines": [
+    "# The original file is property.T300.00001.dat. Note Time is shifted to start from 0 to substract the equilibration time",
+    "#x in the header below correponds column number 1",
+    "#time(1)  | x(2) | Force per atom (3)"
+  ],
+  "columns": [
+    "time_ps",
+    "x_A",
+    "force_pN"
+  ],
+  "column_units": {
+    "time_ps": "ps",
+    "x_A": "\u00c5 (box length L_x)",
+    "force_pN": "pN (per atom)"
+  },
+  "rows_per_file_first": 997,
+  "comment_lines_first": 3,
+  "n_columns": 3,
+  "dt_ps": 0.64,
+  "t_start_ps": 0.0,
+  "t_end_ps": 637.44,
+  "x_start_A": 60.19922,
+  "x_end_A": 61.69815,
+  "strain_end": 0.02489949205321932,
+  "extension_rate_A_per_ps": 0.0023514732407984565,
+  "paper_rate_match": {
+    "index": "v",
+    "ext_rate_A_per_ps": 0.002352,
+    "force_rate_pN_per_ps": 0.09452,
+    "n_traces": 400,
+    "ratio_measured_over_paper": 0.9997760377544458
+  },
+  "memory_estimate": {
+    "bytes_per_file_float64": 23928,
+    "all_files_float64_bytes": 2392800,
+    "all_files_float64_mb": 2.393,
+    "note": "Tiny: the whole set fits in a few MB; streaming is kept for resumability, not memory."
+  },
+  "files": [
+    {
+      "index": 0,
+      "trace_id": "00001",
+      "name": "property.T300.00001.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 1,
+      "trace_id": "00002",
+      "name": "property.T300.00002.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 2,
+      "trace_id": "00003",
+      "name": "property.T300.00003.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 3,
+      "trace_id": "00004",
+      "name": "property.T300.00004.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 4,
+      "trace_id": "00005",
+      "name": "property.T300.00005.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 5,
+      "trace_id": "00006",
+      "name": "property.T300.00006.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 6,
+      "trace_id": "00007",
+      "name": "property.T300.00007.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 7,
+      "trace_id": "00008",
+      "name": "property.T300.00008.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 8,
+      "trace_id": "00009",
+      "name": "property.T300.00009.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 9,
+      "trace_id": "00010",
+      "name": "property.T300.00010.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 10,
+      "trace_id": "00011",
+      "name": "property.T300.00011.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 11,
+      "trace_id": "00012",
+      "name": "property.T300.00012.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 12,
+      "trace_id": "00013",
+      "name": "property.T300.00013.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 13,
+      "trace_id": "00014",
+      "name": "property.T300.00014.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 14,
+      "trace_id": "00015",
+      "name": "property.T300.00015.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 15,
+      "trace_id": "00016",
+      "name": "property.T300.00016.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 16,
+      "trace_id": "00017",
+      "name": "property.T300.00017.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 17,
+      "trace_id": "00018",
+      "name": "property.T300.00018.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 18,
+      "trace_id": "00019",
+      "name": "property.T300.00019.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 19,
+      "trace_id": "00020",
+      "name": "property.T300.00020.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 20,
+      "trace_id": "00021",
+      "name": "property.T300.00021.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 21,
+      "trace_id": "00022",
+      "name": "property.T300.00022.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 22,
+      "trace_id": "00023",
+      "name": "property.T300.00023.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 23,
+      "trace_id": "00024",
+      "name": "property.T300.00024.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 24,
+      "trace_id": "00025",
+      "name": "property.T300.00025.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 25,
+      "trace_id": "00026",
+      "name": "property.T300.00026.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 26,
+      "trace_id": "00027",
+      "name": "property.T300.00027.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 27,
+      "trace_id": "00028",
+      "name": "property.T300.00028.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 28,
+      "trace_id": "00029",
+      "name": "property.T300.00029.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 29,
+      "trace_id": "00030",
+      "name": "property.T300.00030.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 30,
+      "trace_id": "00031",
+      "name": "property.T300.00031.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 31,
+      "trace_id": "00032",
+      "name": "property.T300.00032.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 32,
+      "trace_id": "00033",
+      "name": "property.T300.00033.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 33,
+      "trace_id": "00034",
+      "name": "property.T300.00034.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 34,
+      "trace_id": "00035",
+      "name": "property.T300.00035.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 35,
+      "trace_id": "00036",
+      "name": "property.T300.00036.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 36,
+      "trace_id": "00037",
+      "name": "property.T300.00037.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 37,
+      "trace_id": "00038",
+      "name": "property.T300.00038.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 38,
+      "trace_id": "00039",
+      "name": "property.T300.00039.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 39,
+      "trace_id": "00040",
+      "name": "property.T300.00040.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 40,
+      "trace_id": "00041",
+      "name": "property.T300.00041.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 41,
+      "trace_id": "00042",
+      "name": "property.T300.00042.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 42,
+      "trace_id": "00043",
+      "name": "property.T300.00043.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 43,
+      "trace_id": "00044",
+      "name": "property.T300.00044.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 44,
+      "trace_id": "00045",
+      "name": "property.T300.00045.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 45,
+      "trace_id": "00046",
+      "name": "property.T300.00046.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 46,
+      "trace_id": "00047",
+      "name": "property.T300.00047.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 47,
+      "trace_id": "00048",
+      "name": "property.T300.00048.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 48,
+      "trace_id": "00049",
+      "name": "property.T300.00049.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 49,
+      "trace_id": "00050",
+      "name": "property.T300.00050.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 50,
+      "trace_id": "00051",
+      "name": "property.T300.00051.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 51,
+      "trace_id": "00052",
+      "name": "property.T300.00052.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 52,
+      "trace_id": "00053",
+      "name": "property.T300.00053.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 53,
+      "trace_id": "00054",
+      "name": "property.T300.00054.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 54,
+      "trace_id": "00055",
+      "name": "property.T300.00055.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 55,
+      "trace_id": "00056",
+      "name": "property.T300.00056.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 56,
+      "trace_id": "00057",
+      "name": "property.T300.00057.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 57,
+      "trace_id": "00058",
+      "name": "property.T300.00058.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 58,
+      "trace_id": "00059",
+      "name": "property.T300.00059.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 59,
+      "trace_id": "00060",
+      "name": "property.T300.00060.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 60,
+      "trace_id": "00061",
+      "name": "property.T300.00061.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 61,
+      "trace_id": "00062",
+      "name": "property.T300.00062.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 62,
+      "trace_id": "00063",
+      "name": "property.T300.00063.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 63,
+      "trace_id": "00064",
+      "name": "property.T300.00064.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 64,
+      "trace_id": "00065",
+      "name": "property.T300.00065.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 65,
+      "trace_id": "00066",
+      "name": "property.T300.00066.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 66,
+      "trace_id": "00067",
+      "name": "property.T300.00067.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 67,
+      "trace_id": "00068",
+      "name": "property.T300.00068.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 68,
+      "trace_id": "00069",
+      "name": "property.T300.00069.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 69,
+      "trace_id": "00070",
+      "name": "property.T300.00070.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 70,
+      "trace_id": "00071",
+      "name": "property.T300.00071.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 71,
+      "trace_id": "00072",
+      "name": "property.T300.00072.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 72,
+      "trace_id": "00073",
+      "name": "property.T300.00073.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 73,
+      "trace_id": "00074",
+      "name": "property.T300.00074.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 74,
+      "trace_id": "00075",
+      "name": "property.T300.00075.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 75,
+      "trace_id": "00076",
+      "name": "property.T300.00076.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 76,
+      "trace_id": "00077",
+      "name": "property.T300.00077.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 77,
+      "trace_id": "00078",
+      "name": "property.T300.00078.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 78,
+      "trace_id": "00079",
+      "name": "property.T300.00079.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 79,
+      "trace_id": "00080",
+      "name": "property.T300.00080.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 80,
+      "trace_id": "00081",
+      "name": "property.T300.00081.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 81,
+      "trace_id": "00082",
+      "name": "property.T300.00082.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 82,
+      "trace_id": "00083",
+      "name": "property.T300.00083.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 83,
+      "trace_id": "00084",
+      "name": "property.T300.00084.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 84,
+      "trace_id": "00085",
+      "name": "property.T300.00085.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 85,
+      "trace_id": "00086",
+      "name": "property.T300.00086.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 86,
+      "trace_id": "00087",
+      "name": "property.T300.00087.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 87,
+      "trace_id": "00088",
+      "name": "property.T300.00088.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 88,
+      "trace_id": "00089",
+      "name": "property.T300.00089.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 89,
+      "trace_id": "00090",
+      "name": "property.T300.00090.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 90,
+      "trace_id": "00091",
+      "name": "property.T300.00091.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 91,
+      "trace_id": "00092",
+      "name": "property.T300.00092.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 92,
+      "trace_id": "00093",
+      "name": "property.T300.00093.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 93,
+      "trace_id": "00094",
+      "name": "property.T300.00094.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 94,
+      "trace_id": "00095",
+      "name": "property.T300.00095.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 95,
+      "trace_id": "00096",
+      "name": "property.T300.00096.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 96,
+      "trace_id": "00097",
+      "name": "property.T300.00097.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 97,
+      "trace_id": "00098",
+      "name": "property.T300.00098.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 98,
+      "trace_id": "00099",
+      "name": "property.T300.00099.dat",
+      "size_bytes": 38919
+    },
+    {
+      "index": 99,
+      "trace_id": "00100",
+      "name": "property.T300.00100.dat",
+      "size_bytes": 38919
+    }
+  ],
+  "dataset_manifest": "929570a7e1b7b9c8"
+}

@@ -1,0 +1,8 @@
+{
+  "max_files": null,
+  "batch_size": 10,
+  "force_rate_window_ps": 100.0,
+  "peak_smoothing_points": 15,
+  "overlay_max_traces": 12,
+  "chart_dpi": 130
+}

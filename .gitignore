@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+artifacts/traces/
+artifacts/*.prev
+artifacts/*.tmp
+artifacts/errors.log
+frontend/node_modules/
+frontend/dist/
+artifacts/traces.npz
+artifacts/progress.json
+artifacts/config_used.json

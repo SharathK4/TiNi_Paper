@@ -1,0 +1,90 @@
+# Stage record — Version 1
+
+Dates are 2026-09-17. Times are for an ASUS Zephyrus G16 (RTX 4060, 16 GB),
+CPU only.
+
+## Stage 1 — inspect the paper, task and dataset
+
+* Paper read in full; the equations used are transcribed in
+  `docs/PHYSICS.md` with their status (verified / derived / prototype).
+* Dataset: 100 files × 997 rows × 3 columns, one shared time grid
+  (Δt = 0.64 ps), 3.9 MB. Units established from the data itself
+  (`docs/PHYSICS.md §1`), not assumed. Rate identified as the paper's (v).
+* Handwritten task: V1 = the cubic U(x) and the forward relation between
+  potential and force; inverse problem and Smoluchowski deferred.
+* Design reference: the Keystone project (Razorpay_Hackathon/frontend) —
+  tokens, display face, panel structure reused.
+
+## Stage 2 — architecture and UI design
+
+* Backend: FastAPI, one package `tini` with one module per concern, six
+  resumable stages, atomic writes, fingerprinted checkpoints.
+* Frontend: Vite + React + TS, plain CSS with the Keystone token set,
+  Recharts for charts, KaTeX for notation. One scrolling page, six numbered
+  panels, one status line. No dark mode, no sidebar, no KPI tiles.
+* Kept out on purpose: Tailwind (the Keystone look is plain CSS), Plotly
+  (3 MB for no gain), any worker/parallel processing (4 MB of data).
+
+## Stage 3 — data inspection pipeline
+
+* `inspect` and `validate` stages; per-file and cross-file checks.
+* Tested: `test_validate_trace_flags_bad_input` (shape, NaN, non-monotonic
+  time), and on the real data: 100/100 valid, 0 warnings, shared grid.
+
+## Stage 4 — force-trace processing
+
+* `preprocess` (per-file .npy checkpoints, then stacked .npz) and
+  `statistics` (ensemble average, ḟ with window sensitivity, prototype peak
+  picker with three readings of the peak).
+* Tested: known-slope recovery, moving-average invariants, synthetic peak
+  detection, per-file resume after a simulated crash
+  (`test_pipeline_resumes_preprocess_per_file`), partial invalidation when a
+  setting changes, cancel keeps checkpoints.
+* Real data: ḟ = 0.0943 ± 0.0013 pN/ps vs the paper's 0.0945.
+
+## Stage 5 — cubic potential explorer
+
+* `potential.py`: paper cubic, tilt, f_c, barrier(f); derived F(ξ) and
+  stationary points. 11 tests over both Table 1 parameter sets check the
+  boundary values, stationary points, f_c as the extreme landscape force,
+  analytic vs numerical derivative, barrier(f) against direct evaluation, and
+  the vanishing barrier at f_c.
+* Frontend evaluates the same formulas locally for instant sliders and
+  compares against the backend on every (debounced) change — shows "exact".
+
+## Stage 6 — connect backend and frontend
+
+* Vite proxies `/api` → `:8000`. Progress polled at 1 s while running, 5 s
+  otherwise. A finished run bumps a version counter so every panel refetches.
+* Verified in the browser: all six panels render with real data; the ḟ
+  window, smoothing width and landscape sliders round-trip through the API;
+  selecting a file in the table opens it in panel 02; the tilt time in panel
+  05 uses the ḟ chosen in panel 03 (checked: 19.67 pN / 0.0943 = 208.5 ps).
+* Responsive: no horizontal overflow at 375 px.
+
+## Stage 7 — test, validate, optimise, document
+
+* 28 backend tests pass (`python -m pytest`, ~3 s). `tsc -b` clean.
+* Full pipeline on 100 files: 1.9 s cold, 0.8 s warm. Memory: trivial.
+* Fixes made during review: percent not restored after a server restart;
+  Δt printed with float noise; axis ticks with float noise; uppercase CSS
+  mangling Greek letters in titles; auto ticks like −10.22 replaced by
+  nice ticks; code changes now invalidate the stages they affect.
+
+## Unresolved / for later
+
+1. The "post-transition" behaviour (force to ≈ −45 pN, then reload) is
+   recorded but not interpreted. It is outside the paper's model, which
+   stops at the transition.
+2. The peak picker is a placeholder. Before Version 2 fits p(f|ḟ), the
+   picker's bias against smoothing width should be characterised (the
+   sensitivity is visible in panel 04 but not tabulated).
+3. `t‡` is picked on the smoothed trace, which shifts the peak slightly
+   earlier than the sharp drop; the raw-peak time within the smoothing
+   window is also stored (`t_raw_peak_ps`) for comparison.
+4. Only rate (v) is present. The force spectrum ⟨f⟩(ḟ) needs the other
+   rates, which are not in this dataset.
+5. The display font (Against) is a personal-use demo licence, carried over
+   from Keystone; swap it before any public use.
+6. A `.prev` copy is kept for every file but there is no rotation beyond one
+   generation.

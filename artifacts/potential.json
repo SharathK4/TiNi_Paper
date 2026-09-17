@@ -1,0 +1,144 @@
+{
+  "parameter_sets": {
+    "pdf_mle": {
+      "label": "Table 1 \u00b7 fit of p(f | \u1e1f), Eq. (6), maximum likelihood",
+      "source": {
+        "label": "Table 1 \u00b7 fit of p(f | \u1e1f), Eq. (6), maximum likelihood",
+        "U_barrier_pN_A": 638.14,
+        "U_barrier_se": 9.62,
+        "xi_barrier_A": 29.2,
+        "xi_barrier_se": 0.45,
+        "gamma0_per_ps": 3.96e-07,
+        "gamma0_se": 6.75e-08
+      },
+      "parameters": {
+        "U_barrier_pN_A": 638.14,
+        "xi_barrier_A": 29.2,
+        "f_c_pN": 32.781164383561645,
+        "U_barrier_kBT": 15.40676401701905,
+        "kBT_pN_A": 41.41947,
+        "curvature_at_min_pN_per_A": 4.490570463501595
+      },
+      "force_check_max_abs_pN": 0.0021929991921894043,
+      "inflection_xi_A": 14.6,
+      "tilts": [
+        {
+          "f_pN": 0.0,
+          "f_over_fc": 0.0,
+          "t_ps": 0.0,
+          "barrier_pN_A": 638.14,
+          "barrier_kBT": 15.40676401701905,
+          "xi_min": 0.0,
+          "xi_ts": 29.2
+        },
+        {
+          "f_pN": 8.195291095890411,
+          "f_over_fc": 0.25,
+          "t_ps": 86.86864419174339,
+          "barrier_pN_A": 414.4840883782513,
+          "barrier_kBT": 10.006986771637862,
+          "xi_min": 1.9560291047471967,
+          "xi_ts": 27.2439708952528
+        },
+        {
+          "f_pN": 16.390582191780823,
+          "f_over_fc": 0.5,
+          "t_ps": 173.73728838348677,
+          "barrier_pN_A": 225.61656067319174,
+          "barrier_kBT": 5.447113656287533,
+          "xi_min": 4.276240994676405,
+          "xi_ts": 24.923759005323596
+        },
+        {
+          "f_pN": 24.585873287671234,
+          "f_over_fc": 0.75,
+          "t_ps": 260.60593257523016,
+          "barrier_pN_A": 79.7675,
+          "barrier_kBT": 1.9258455021273813,
+          "xi_min": 7.3,
+          "xi_ts": 21.9
+        },
+        {
+          "f_pN": 32.781164383561645,
+          "f_over_fc": 1.0,
+          "t_ps": 347.47457676697354,
+          "barrier_pN_A": 0.0,
+          "barrier_kBT": 0.0,
+          "xi_min": 14.6,
+          "xi_ts": 14.6
+        }
+      ]
+    },
+    "mean_lsq": {
+      "label": "Table 1 \u00b7 fit of \u27e8f\u27e9(\u1e1f), Eq. (8), least squares",
+      "source": {
+        "label": "Table 1 \u00b7 fit of \u27e8f\u27e9(\u1e1f), Eq. (8), least squares",
+        "U_barrier_pN_A": 659.0,
+        "U_barrier_se": 38.6,
+        "xi_barrier_A": 36.1,
+        "xi_barrier_se": 3.6,
+        "gamma0_per_ps": 6.12e-08,
+        "gamma0_se": 6e-08
+      },
+      "parameters": {
+        "U_barrier_pN_A": 659.0,
+        "xi_barrier_A": 36.1,
+        "f_c_pN": 27.382271468144044,
+        "U_barrier_kBT": 15.910391900234359,
+        "kBT_pN_A": 41.41947,
+        "curvature_at_min_pN_per_A": 3.0340467000713622
+      },
+      "force_check_max_abs_pN": 0.0018318232538518942,
+      "inflection_xi_A": 18.05,
+      "tilts": [
+        {
+          "f_pN": 0.0,
+          "f_over_fc": 0.0,
+          "t_ps": 0.0,
+          "barrier_pN_A": 659.0,
+          "barrier_kBT": 15.910391900234359,
+          "xi_min": 0.0,
+          "xi_ts": 36.1
+        },
+        {
+          "f_pN": 6.845567867036011,
+          "f_over_fc": 0.25,
+          "t_ps": 72.56181536128499,
+          "barrier_pN_A": 428.0330558204588,
+          "barrier_kBT": 10.334102677326843,
+          "xi_min": 2.418241461690883,
+          "xi_ts": 33.68175853830912
+        },
+        {
+          "f_pN": 13.691135734072022,
+          "f_over_fc": 0.5,
+          "t_ps": 145.12363072256997,
+          "barrier_pN_A": 232.99168440096742,
+          "barrier_kBT": 5.625173001995618,
+          "xi_min": 5.286722599582816,
+          "xi_ts": 30.813277400417185
+        },
+        {
+          "f_pN": 20.536703601108034,
+          "f_over_fc": 0.75,
+          "t_ps": 217.68544608385497,
+          "barrier_pN_A": 82.375,
+          "barrier_kBT": 1.9887989875292948,
+          "xi_min": 9.025,
+          "xi_ts": 27.075000000000003
+        },
+        {
+          "f_pN": 27.382271468144044,
+          "f_over_fc": 1.0,
+          "t_ps": 290.24726144513994,
+          "barrier_pN_A": 0.0,
+          "barrier_kBT": 0.0,
+          "xi_min": 18.05,
+          "xi_ts": 18.05
+        }
+      ]
+    }
+  },
+  "default_parameter_set": "pdf_mle",
+  "force_rate_pN_per_ps": 0.09434118803329211
+}

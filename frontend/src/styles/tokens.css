@@ -1,0 +1,82 @@
+/* Design tokens.
+ *
+ * Cool lavender-white ground, near-black ink, one terracotta accent for the
+ * measured quantity (force), and a deep slate for the model (landscape). The
+ * neutral ramp is cool all the way through so it sits on the ground without
+ * looking dirty. Nothing else on the page is coloured.
+ */
+
+@font-face {
+  /* Display face only: the wordmark and section titles. Personal-use demo
+   * licence, see public/fonts/AGAINST-LICENSE.txt. */
+  font-family: 'Against';
+  src: url('/fonts/against-regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+
+  --paper: #f3f3fa;
+  --paper-cool: #eff0f8;
+  --paper-bright: #f7f7fc;
+
+  --surface: #fcfcfe;
+  --surface-2: #eeeff7;
+  --surface-sunk: #e5e7f1;
+
+  --ink: #15161d;
+  --ink-1: #383a47;
+  --ink-2: #6e7180;
+  --ink-3: #9698a8;
+  --ink-4: #babcca;
+
+  --border: #dddfec;
+  --border-soft: #e9eaf5;
+  --border-strong: #c6c9d9;
+
+  /* measured quantities: force, data */
+  --accent: #b5462a;
+  --accent-2: #d4703f;
+  --accent-soft: rgba(181, 70, 42, 0.1);
+  --accent-band: rgba(181, 70, 42, 0.14);
+
+  /* the model: landscape, potential */
+  --model: #2f3a63;
+  --model-2: #6b77a8;
+  --model-soft: rgba(47, 58, 99, 0.1);
+
+  /* neutral series for overlays */
+  --series-1: #7c8199;
+  --series-2: #a5a9bd;
+
+  --sage: #4f7360;
+  --warn: #b98a2a;
+
+  --lift-1: 0 1px 2px rgba(40, 44, 68, 0.04), 0 12px 30px -24px rgba(40, 44, 68, 0.24);
+  --lift-2: 0 1px 3px rgba(40, 44, 68, 0.06), 0 26px 60px -34px rgba(40, 44, 68, 0.32);
+
+  --display: 'Against', 'Hoefler Text', 'Iowan Old Style', Georgia, serif;
+  --text: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  --mono: 'Cascadia Mono', 'SF Mono', 'Roboto Mono', ui-monospace, Menlo, monospace;
+  --num: 'tnum' 1, 'lnum' 1;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --slow: 620ms;
+  --med: 320ms;
+  --fast: 160ms;
+
+  --radius: 22px;
+  --radius-sm: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --slow: 1ms;
+    --med: 1ms;
+    --fast: 1ms;
+  }
+}

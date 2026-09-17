@@ -1,0 +1,100 @@
+{
+  "inspect": {
+    "stage": "inspect",
+    "fingerprint": "663923fe3b547f7f-929570a7e1b7b9c8-41ebd78f",
+    "completed_at": 1789621190.6880682,
+    "completed_at_iso": "2026-09-17T10:29:50",
+    "duration_s": 0.01,
+    "outputs": [
+      "inspection.json"
+    ],
+    "summary": {
+      "n_files": 100,
+      "total_size_mb": 3.892
+    }
+  },
+  "validate": {
+    "stage": "validate",
+    "fingerprint": "136391f441590b6d-929570a7e1b7b9c8-aab6d384",
+    "completed_at": 1789621190.776519,
+    "completed_at_iso": "2026-09-17T10:29:50",
+    "duration_s": 0.082,
+    "outputs": [
+      "validation.json"
+    ],
+    "summary": {
+      "n_ok": 100,
+      "n_failed": 0,
+      "ok": true
+    }
+  },
+  "preprocess": {
+    "stage": "preprocess",
+    "fingerprint": "663923fe3b547f7f-929570a7e1b7b9c8-41ebd78f",
+    "completed_at": 1789621190.8310206,
+    "completed_at_iso": "2026-09-17T10:29:50",
+    "duration_s": 0.049,
+    "outputs": [
+      "traces.npz",
+      "files.csv",
+      "completed_files.json"
+    ],
+    "summary": {
+      "n_traces": 100,
+      "shape": [
+        100,
+        997,
+        3
+      ]
+    }
+  },
+  "statistics": {
+    "stage": "statistics",
+    "fingerprint": "0105e9af560b2672-929570a7e1b7b9c8-f559a7e2",
+    "completed_at": 1789621190.8823693,
+    "completed_at_iso": "2026-09-17T10:29:50",
+    "duration_s": 0.047,
+    "outputs": [
+      "average_curves.csv",
+      "force_rate.json",
+      "events.json",
+      "events.csv"
+    ],
+    "summary": {
+      "force_rate_pN_per_ps": 0.09434118803329211,
+      "mean_t_peak_ps": 196.2624,
+      "mean_f_crit_pN": 18.51562798226519
+    }
+  },
+  "potential": {
+    "stage": "potential",
+    "fingerprint": "7c66b56c5d93679f-929570a7e1b7b9c8-86c28c92",
+    "completed_at": 1789621190.9046028,
+    "completed_at_iso": "2026-09-17T10:29:50",
+    "duration_s": 0.017,
+    "outputs": [
+      "potential.json",
+      "potential_curves.csv"
+    ],
+    "summary": {
+      "f_c_pN": 32.781164383561645
+    }
+  },
+  "charts": {
+    "stage": "charts",
+    "fingerprint": "4d72728f761113e0-929570a7e1b7b9c8-99869980",
+    "completed_at": 1789621191.423726,
+    "completed_at_iso": "2026-09-17T10:29:51",
+    "duration_s": 0.514,
+    "outputs": [
+      "charts/traces_overlay.png",
+      "charts/mean_trace.png",
+      "charts/force_vs_x.png",
+      "charts/potential.png",
+      "charts/events.png"
+    ],
+    "summary": {
+      "n_charts": 5
+    }
+  }
+}
