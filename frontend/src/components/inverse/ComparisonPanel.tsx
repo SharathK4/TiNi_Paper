@@ -3,6 +3,7 @@ import { Bar, ComposedChart, ErrorBar, Line, ReferenceLine, ResponsiveContainer,
 import type { InvDiagnostics, InvResult, InvSample } from '../../api/inverse'
 import { fixed, pval } from '../../lib/format'
 import { Empty, Figure, Grid, Panel, Readout, Seg, Tip, XNum, YNum, chart } from '../ui'
+import { M } from '../Math'
 
 /* E. The fitted model against the observed sample — density, cumulative,
  * residuals and quantiles — with the paper's parameter sets drawn for
@@ -29,7 +30,7 @@ export function ComparisonPanel({ result, diag, sample }: { result: InvResult | 
   const lead = <>Does the fitted density describe the sample? Four views of one question, with the paper's parameters overlaid in lighter slate.</>
   if (!result || !fit) {
     return (
-      <Panel index="E" title="Model against observations" lead={lead}>
+      <Panel index="2.5" title="Model against observations" lead={lead}>
         <Empty>No run to compare yet.</Empty>
       </Panel>
     )
@@ -38,7 +39,7 @@ export function ComparisonPanel({ result, diag, sample }: { result: InvResult | 
   const pc = result.paper_comparison[paperKey]
 
   return (
-    <Panel index="E" title="Model against observations" lead={lead}>
+    <Panel index="2.5" title="Model against observations" lead={lead}>
       <div className="controls">
         <div className="control">
           <span className="control__label">
@@ -48,8 +49,8 @@ export function ComparisonPanel({ result, diag, sample }: { result: InvResult | 
             value={paperKey}
             onChange={setPaperKey}
             options={[
-              { value: 'pdf_mle', label: 'Table 1, p(f|ḟ)' },
-              { value: 'mean_lsq', label: 'Table 1, ⟨f⟩(ḟ)' },
+              { value: 'pdf_mle', label: <>Table 1, <M tex="p(f\mid\dot f)" /></> },
+              { value: 'mean_lsq', label: <>Table 1, <M tex="\langle f\rangle(\dot f)" /></> },
             ]}
           />
         </div>
@@ -59,7 +60,7 @@ export function ComparisonPanel({ result, diag, sample }: { result: InvResult | 
       </div>
 
       <div className="grid-2">
-        <Figure title="density" note="Bars ± √n; the paper's curve uses Table 1 values at this dataset's ḟ.">
+        <Figure title="density" note="Bars ± √n; the paper's curve uses Table 1 values at this dataset's force rate.">
           <div className="chart chart--tall">
             <ResponsiveContainer>
               <ComposedChart data={dens} margin={chart.margin}>
@@ -131,9 +132,9 @@ export function ComparisonPanel({ result, diag, sample }: { result: InvResult | 
         <Readout label="KS p (fit)" value={pval(g.ks_pvalue)} tone="model" />
         <Readout label="χ² p (fit)" value={pval(g.chi2_pvalue)} tone="model" />
         <Readout label="AIC" value={fixed(g.aic, 1)} />
-        <Readout label="fit ⟨f⟩, s.d." value={`${fixed(g.model_mean_exact_pN, 2)}, ${fixed(g.model_sd_exact_pN, 2)}`} unit="pN" tone="model" />
-        <Readout label="sample ⟨f⟩, s.d." value={`${fixed(g.sample_mean_pN, 2)}, ${fixed(g.sample_sd_pN, 2)}`} unit="pN" tone="accent" />
-        {pc && <Readout label="paper ⟨f⟩, s.d." value={`${fixed(pc.model_mean_exact_pN, 2)}, ${fixed(pc.model_sd_exact_pN, 2)}`} unit="pN" />}
+        <Readout label={<>fit <M tex="\langle f\rangle" />, s.d.</>} value={`${fixed(g.model_mean_exact_pN, 2)}, ${fixed(g.model_sd_exact_pN, 2)}`} unit="pN" tone="model" />
+        <Readout label={<>sample <M tex="\langle f\rangle" />, s.d.</>} value={`${fixed(g.sample_mean_pN, 2)}, ${fixed(g.sample_sd_pN, 2)}`} unit="pN" tone="accent" />
+        {pc && <Readout label={<>paper <M tex="\langle f\rangle" />, s.d.</>} value={`${fixed(pc.model_mean_exact_pN, 2)}, ${fixed(pc.model_sd_exact_pN, 2)}`} unit="pN" />}
         {pc && <Readout label="LR test, paper vs fit" value={`${fixed(pc.likelihood_ratio_vs_fit.statistic, 1)} · p ${pval(pc.likelihood_ratio_vs_fit.pvalue)}`} unit={`${pc.likelihood_ratio_vs_fit.df} d.o.f.`} />}
       </div>
     </Panel>

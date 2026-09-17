@@ -54,14 +54,14 @@ export function TracePanel({ version, selected, onSelect, available, events }: {
 
   if (!available.length) {
     return (
-      <Panel index="02" title="One trace" lead={lead}>
+      <Panel index="1.2" title="One trace" lead={lead}>
         <Empty>Traces appear here once the dataset is processed.</Empty>
       </Panel>
     )
   }
 
   return (
-    <Panel index="02" title="One trace" lead={lead}>
+    <Panel index="1.2" title="One trace" lead={lead}>
       <div className="controls">
         <div className="control">
           <span className="control__label">
@@ -87,7 +87,7 @@ export function TracePanel({ version, selected, onSelect, available, events }: {
             onChange={setYAxis}
             options={[
               { value: 'time', label: 'time t' },
-              { value: 'x', label: 'box length Lₓ' },
+              { value: 'x', label: 'box length' },
             ]}
           />
         </div>
@@ -98,7 +98,7 @@ export function TracePanel({ version, selected, onSelect, available, events }: {
         note={
           ev ? (
             <>
-              Marker: peak of the {events?.smoothing_points}-point smoothed trace at t‡ = {fixed(ev.t_peak_ps, 1)} ps (prototype picker, section 04). The force then falls to{' '}
+              Marker: peak of the {events?.smoothing_points}-point smoothed trace at t‡ = {fixed(ev.t_peak_ps, 1)} ps (prototype picker, section 1.4). The force then falls to{' '}
               {fixed(ev.f_trough_pN, 1)} pN — the twinned lattice is briefly shorter than the box, so it is compressed, and then reloads.
             </>
           ) : undefined
@@ -108,7 +108,7 @@ export function TracePanel({ version, selected, onSelect, available, events }: {
           <ResponsiveContainer>
             <ComposedChart data={data} margin={chart.margin}>
               <Grid />
-              <XNum dataKey={yAxis === 'time' ? 't' : 'x'} label={yAxis === 'time' ? 't [ps]' : 'Lₓ [Å]'} range={yAxis === 'time' ? tRange : undefined} />
+              <XNum dataKey={yAxis === 'time' ? 't' : 'x'} label={yAxis === 'time' ? 't [ps]' : 'box length [Å]'} range={yAxis === 'time' ? tRange : undefined} />
               <YNum label="f [pN]" />
               <Tooltip
                 content={
@@ -133,7 +133,7 @@ export function TracePanel({ version, selected, onSelect, available, events }: {
           <Readout label="Raw max" value={fixed(Math.max(...trace.data.force_pN), 2)} unit="pN" />
           {ev && <Readout label="Smoothed peak" value={fixed(ev.f_peak_smoothed_pN, 2)} unit="pN" tone="accent" />}
           {ev && <Readout label="t‡" value={fixed(ev.t_peak_ps, 1)} unit="ps" />}
-          {ev && <Readout label="Lₓ at t‡" value={fixed(ev.x_peak_A, 3)} unit="Å" />}
+          {ev && <Readout label="box length at t‡" value={fixed(ev.x_peak_A, 3)} unit="Å" />}
           {ev && <Readout label="Trough" value={fixed(ev.f_trough_pN, 1)} unit="pN" />}
         </div>
       )}

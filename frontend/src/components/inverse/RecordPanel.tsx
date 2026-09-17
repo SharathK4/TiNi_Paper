@@ -10,7 +10,7 @@ export function RecordPanel({ result, spec, fit }: { result: InvResult | null; s
   const lead = <>Every number above traces to a dataset, a code version, a model equation, a configuration and a method.</>
   if (!result) {
     return (
-      <Panel index="G" title="The record" lead={lead}>
+      <Panel index="2.7" title="The record" lead={lead}>
         <Empty>No run yet.</Empty>
       </Panel>
     )
@@ -18,7 +18,7 @@ export function RecordPanel({ result, spec, fit }: { result: InvResult | null; s
   const cfg = result.config
   const stale = spec && spec.code_hash !== result.code_hash
   return (
-    <Panel index="G" title="The record" lead={lead}>
+    <Panel index="2.7" title="The record" lead={lead}>
       <div className="grid-2" style={{ alignItems: 'start' }}>
         <div>
           <table className="facts">

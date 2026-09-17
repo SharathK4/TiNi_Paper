@@ -3,6 +3,7 @@ import type { InvProgress, InvRunList, InvSpec } from '../../api/inverse'
 import { secs, sci } from '../../lib/format'
 import { Panel, Seg } from '../ui'
 import { Tag } from './shared'
+import { M } from '../Math'
 
 /* D. Where a run is configured, started, watched and re-opened. */
 export function WorkspacePanel({
@@ -40,7 +41,7 @@ export function WorkspacePanel({
 
   return (
     <Panel
-      index="D"
+      index="2.4"
       title="Running the inference"
       lead={<>One run is one complete answer — fit, uncertainty, diagnostics, sensitivity, synthetic recovery — stored under its own identifier.</>}
     >
@@ -56,7 +57,7 @@ export function WorkspacePanel({
                 value={source}
                 onChange={setSource}
                 options={[
-                  { value: 'rate_x_time', label: 'ḟ · t‡ (paper)' },
+                  { value: 'rate_x_time', label: <><M tex="\dot f\,t^\ddagger" /> (paper)</> },
                   { value: 'smoothed_peak', label: 'smoothed peak' },
                 ]}
               />
@@ -69,8 +70,8 @@ export function WorkspacePanel({
                 value={reference}
                 onChange={setReference}
                 options={[
-                  { value: 'pdf_mle', label: 'Table 1, p(f|ḟ)' },
-                  { value: 'mean_lsq', label: 'Table 1, ⟨f⟩(ḟ)' },
+                  { value: 'pdf_mle', label: <>Table 1, <M tex="p(f\mid\dot f)" /></> },
+                  { value: 'mean_lsq', label: <>Table 1, <M tex="\langle f\rangle(\dot f)" /></> },
                 ]}
               />
             </div>
@@ -174,9 +175,9 @@ export function WorkspacePanel({
                     <th>finished</th>
                     <th>f‡ from</th>
                     <th>n</th>
-                    <th>U‡</th>
-                    <th>ξ‡</th>
-                    <th>Γ₀</th>
+                    <th><M tex="U^\ddagger" /></th>
+                    <th><M tex="\xi^\ddagger" /></th>
+                    <th><M tex="\Gamma_0" /></th>
                     <th>−ln L</th>
                   </tr>
                 </thead>
@@ -188,7 +189,7 @@ export function WorkspacePanel({
                         {runs.latest?.run_id === r.run_id && <Tag kind="measured">latest</Tag>}
                       </td>
                       <td>{r.completed_at_iso?.replace('T', ' ')}</td>
-                      <td>{r.source === 'rate_x_time' ? 'ḟ·t‡' : 'peak'}</td>
+                      <td>{r.source === 'rate_x_time' ? <M tex="\dot f\,t^\ddagger" /> : 'peak'}</td>
                       <td>{r.n}</td>
                       <td>{r.params?.U_barrier?.toFixed(0)}</td>
                       <td>{r.params?.xi_barrier?.toFixed(1)}</td>

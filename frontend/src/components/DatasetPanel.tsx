@@ -4,6 +4,7 @@ import { api, type Collection, type FileRow, type Inspection } from '../api/clie
 import { useResource } from '../api/hooks'
 import { fixed, fmt, mb } from '../lib/format'
 import { Empty, Figure, Grid, Panel, Readout, Tip, XNum, YNum, chart } from './ui'
+import { M } from './Math'
 
 export function DatasetPanel({ version, selected, onSelect }: { version: number; selected: string | null; onSelect: (id: string) => void }) {
   const insp = useResource<Inspection>(() => api.inspection(), [], version)
@@ -55,7 +56,7 @@ export function DatasetPanel({ version, selected, onSelect }: { version: number;
 
   if (insp.missing || files.missing) {
     return (
-      <Panel index="01" title="The dataset" lead={lead}>
+      <Panel index="1.1" title="The dataset" lead={lead}>
         <Empty>Run the pipeline to inspect and validate the files.</Empty>
       </Panel>
     )
@@ -64,7 +65,7 @@ export function DatasetPanel({ version, selected, onSelect }: { version: number;
   const c = files.data?.collection
 
   return (
-    <Panel index="01" title="The dataset" lead={lead}>
+    <Panel index="1.1" title="The dataset" lead={lead}>
       <div className="grid-2">
         <div>
           <div className="figure__title">What the files contain</div>
@@ -80,7 +81,7 @@ export function DatasetPanel({ version, selected, onSelect }: { version: number;
                 <tr>
                   <td>Columns</td>
                   <td>
-                    time [ps] · L<sub>x</sub> box length [Å] · force per atom [pN]
+                    time [ps] · box length <M tex="L_x" /> [Å] · force per atom [pN]
                   </td>
                 </tr>
                 <tr>
@@ -131,7 +132,7 @@ export function DatasetPanel({ version, selected, onSelect }: { version: number;
             </div>
           )}
         </div>
-        <Figure title="Raw peak force per file" note="argmax of the raw trace — noise-inflated; the smoothed peak in section 04 is the one used for the transition statistics.">
+        <Figure title="Raw peak force per file" note="argmax of the raw trace — noise-inflated; the smoothed peak in section 1.4 is the one used for the transition statistics.">
           <div className="chart chart--short">
             <ResponsiveContainer>
               <BarChart data={peakHist} margin={chart.margin} barCategoryGap={2}>
@@ -147,7 +148,7 @@ export function DatasetPanel({ version, selected, onSelect }: { version: number;
       </div>
 
       <div style={{ marginTop: 30 }}>
-        <div className="figure__title">Every file · click a row to open it in section 02</div>
+        <div className="figure__title">Every file · click a row to open it in section 1.2</div>
         <div className="table-wrap">
           <table className="data">
             <thead>
@@ -156,14 +157,14 @@ export function DatasetPanel({ version, selected, onSelect }: { version: number;
                   [
                     ['trace_id', 'trace'],
                     ['n_rows', 'rows'],
-                    ['x_start_A', 'Lₓ(0) Å'],
-                    ['ext_rate_A_per_ps', 'dLₓ/dt Å/ps'],
-                    ['f_mean_pN', '⟨f⟩ pN'],
+                    ['x_start_A', 'box length at t = 0 Å'],
+                    ['ext_rate_A_per_ps', 'extension rate Å/ps'],
+                    ['f_mean_pN', 'mean f pN'],
                     ['f_std_pN', 's.d. pN'],
                     ['f_max_pN', 'raw max pN'],
                     ['t_peak_ps', 't‡ ps'],
                     ['f_peak_smoothed_pN', 'smoothed peak pN'],
-                    ['f_crit_from_rate_pN', 'ḟ·t‡ pN'],
+                    ['f_crit_from_rate_pN', 'f‡ = rate × t‡ pN'],
                     ['ok', 'valid'],
                   ] as [keyof FileRow, string][]
                 ).map(([k, l]) => (

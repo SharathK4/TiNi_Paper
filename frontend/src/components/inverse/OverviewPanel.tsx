@@ -8,7 +8,7 @@ import { PARAM_KEYS, PARAM_LABEL, PARAM_UNIT, fmtParam, interval } from './share
 export function OverviewPanel({ spec, result }: { spec: InvSpec | null; result: InvResult | null }) {
   return (
     <Panel
-      index="A"
+      index="2.1"
       title="The inverse problem"
       lead={
         <>
@@ -46,16 +46,16 @@ export function OverviewPanel({ spec, result }: { spec: InvSpec | null; result: 
               <div className="headline__ci num">
                 {fixed(result.bootstrap.f_c_pN?.ci95[0], 1)} – {fixed(result.bootstrap.f_c_pN?.ci95[1], 0)} bootstrap
               </div>
-              <div className="headline__paper num">barrier {fixed(result.fit.derived.U_barrier_kBT, 1)} k_BT</div>
+              <div className="headline__paper num">barrier {fixed(result.fit.derived.U_barrier_kBT, 1)} <M tex="k_BT" /></div>
             </div>
           </div>
           <p className="headline__note">
             One loading rate fixes where the distribution sits and how wide it is — two facts for three parameters. <M tex="\Gamma_0" /> is therefore known to an
-            order of magnitude and <M tex="U^\ddagger" /> is open above. Section F makes that quantitative.
+            order of magnitude and <M tex="U^\ddagger" /> is open above. Section 2.6 makes that quantitative.
           </p>
         </div>
       ) : (
-        <Empty>No inference has been run yet — section D.</Empty>
+        <Empty>No inference has been run yet — section 2.4.</Empty>
       )}
 
       <table className="facts facts--wide" style={{ marginTop: 56 }}>
@@ -88,7 +88,7 @@ export function OverviewPanel({ spec, result }: { spec: InvSpec | null; result: 
             <td>Rests on</td>
             <td>
               the paper's overdamped, absorbing-boundary model; independent events; a linear ramp; and the Version 1 peak picker, which is not the paper's and
-              is varied in section F
+              is varied in section 2.6
             </td>
           </tr>
         </tbody>

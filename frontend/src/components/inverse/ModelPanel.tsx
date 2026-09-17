@@ -45,7 +45,7 @@ export function ModelPanel({ spec, sample, fitted }: { spec: InvSpec | null; sam
 
   return (
     <Panel
-      index="C"
+      index="2.3"
       title="The model"
       lead={<>A crystal waits in the austenite well while the applied force lowers the barrier; the paper solves that race in closed form.</>}
     >
@@ -59,7 +59,7 @@ export function ModelPanel({ spec, sample, fitted }: { spec: InvSpec | null; sam
             <M tex="\mu_0" /> depends on the loading rate — which is why one rate cannot separate all three.
           </p>
         </div>
-        <Figure title={<><M tex="p(f\mid\dot f)" /> and <M tex="\psi(f)" /> at ḟ = {m ? fixed(m.force_rate_pN_per_ps, 4) : '—'} pN/ps</>}>
+        <Figure title={<><M tex="p(f\mid\dot f)" /> and <M tex="\psi(f)" /> at <M tex="\dot f" /> = {m ? fixed(m.force_rate_pN_per_ps, 4) : '—'} pN/ps</>}>
           <div className="chart chart--tall">
             <ResponsiveContainer>
               <ComposedChart data={curves} margin={chart.margin}>
@@ -70,7 +70,7 @@ export function ModelPanel({ spec, sample, fitted }: { spec: InvSpec | null; sam
                 <Line dataKey="p" type="monotone" stroke={chart.model} strokeWidth={1.6} dot={false} isAnimationActive={false} />
                 <Line dataKey="psi" type="monotone" stroke={chart.ink3} strokeWidth={1} strokeDasharray="4 3" dot={false} isAnimationActive={false} yAxisId="r" />
                 <YAxis yAxisId="r" orientation="right" type="number" domain={[0, 1]} ticks={[0, 0.5, 1]} width={36} tick={{ fontSize: 11, fill: '#9698a8' }} tickLine={false} axisLine={false} label={{ value: 'ψ', angle: 90, position: 'insideRight', fontSize: 11, fill: '#6e7180' }} />
-                {m && <ReferenceLine x={m.mean_exact_pN} stroke={chart.model2} strokeDasharray="2 3" label={{ value: '⟨f⟩', position: 'top', fontSize: 11, fill: chart.model2 }} />}
+                {m && <ReferenceLine x={m.mean_exact_pN} stroke={chart.model2} strokeDasharray="2 3" label={{ value: 'mean', position: 'top', fontSize: 11, fill: chart.model2 }} />}
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -86,8 +86,8 @@ export function ModelPanel({ spec, sample, fitted }: { spec: InvSpec | null; sam
             value={preset}
             onChange={setPreset}
             options={[
-              { value: 'pdf_mle', label: 'paper, p(f|ḟ)' },
-              { value: 'mean_lsq', label: 'paper, ⟨f⟩(ḟ)' },
+              { value: 'pdf_mle', label: <>paper, <M tex="p(f\mid\dot f)" /></> },
+              { value: 'mean_lsq', label: <>paper, <M tex="\langle f\rangle(\dot f)" /></> },
               ...(fitted ? [{ value: 'fitted', label: 'this fit' }] : []),
             ]}
           />
@@ -101,7 +101,7 @@ export function ModelPanel({ spec, sample, fitted }: { spec: InvSpec | null; sam
           <Readout label={<M tex="f_c" />} value={fixed(m.parameters.f_c_pN, 1)} unit="pN" tone="model" />
           <Readout label={<M tex="U^\ddagger/k_BT" />} value={fixed(m.parameters.U_barrier_kBT, 1)} tone="model" />
           <Readout label={<M tex="\mu_0" />} value={sci(m.parameters.mu0, 1)} tone="model" />
-          <Readout label="⟨f⟩ · Eq. 8 / exact" value={`${fixed(m.mean_eq8_pN, 1)} / ${fixed(m.mean_exact_pN, 1)}`} unit="pN" />
+          <Readout label={<><M tex="\langle f\rangle" /> · Eq. 8 / exact</>} value={`${fixed(m.mean_eq8_pN, 1)} / ${fixed(m.mean_exact_pN, 1)}`} unit="pN" />
           <Readout label={<M tex="\psi(f_c)" />} value={sci(m.residual_mass, 0)} />
         </div>
       )}
@@ -115,8 +115,8 @@ export function ModelPanel({ spec, sample, fitted }: { spec: InvSpec | null; sam
             <ResponsiveContainer>
               <ComposedChart data={spectrum} margin={chart.margin}>
                 <Grid />
-                <XLog dataKey="x" label="ḟ [pN/ps]" lo={2e-3} hi={2} />
-                <YNum label="⟨f‡⟩ [pN]" range={[5, 35]} />
+                <XLog dataKey="x" label="force rate [pN/ps]" lo={2e-3} hi={2} />
+                <YNum label="mean f‡ [pN]" range={[5, 35]} />
                 <Tooltip content={<Tip unitX="pN/ps" fmtX={(v) => sci(v, 2)} rows={(p) => `${p.name ?? p.dataKey}: ${typeof p.value === 'number' ? p.value.toFixed(2) : ''} pN`} />} />
                 <Line dataKey="eq8" name="Eq. 8" type="monotone" stroke={chart.model} strokeWidth={1.6} dot={false} isAnimationActive={false} />
                 <Line dataKey="exact" name="exact" type="monotone" stroke={chart.model} strokeWidth={1} strokeDasharray="2 3" dot={false} isAnimationActive={false} />

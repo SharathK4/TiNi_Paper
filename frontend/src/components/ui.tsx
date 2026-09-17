@@ -37,7 +37,7 @@ export function Readout({ label, value, unit, tone }: { label: ReactNode; value:
   )
 }
 
-export function Seg<T extends string>({ value, options, onChange }: { value: T; options: { value: T; label: string }[]; onChange: (v: T) => void }) {
+export function Seg<T extends string>({ value, options, onChange }: { value: T; options: { value: T; label: ReactNode }[]; onChange: (v: T) => void }) {
   return (
     <div className="seg" role="tablist">
       {options.map((o) => (

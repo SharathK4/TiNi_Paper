@@ -34,7 +34,7 @@ export function EventsPanel({ version, defaultSmoothing, fc, onEvents }: { versi
 
   if (ev.missing) {
     return (
-      <Panel index="04" title="Transition events" lead={lead}>
+      <Panel index="1.4" title="Transition events" lead={lead}>
         <Empty>Run the pipeline to detect transition events.</Empty>
       </Panel>
     )
@@ -42,7 +42,7 @@ export function EventsPanel({ version, defaultSmoothing, fc, onEvents }: { versi
   const d = ev.data
 
   return (
-    <Panel index="04" title="Transition events" lead={lead}>
+    <Panel index="1.4" title="Transition events" lead={lead}>
       <div className="controls">
         <Slider label="peak-picker smoothing" value={smoothing} min={1} max={61} step={2} onChange={setSmoothing} format={(v) => `${v} pts · ${(v * 0.64).toFixed(1)} ps`} />
         <span className="tag tag--prototype" style={{ marginLeft: 0, alignSelf: 'center' }}>
@@ -70,7 +70,7 @@ export function EventsPanel({ version, defaultSmoothing, fc, onEvents }: { versi
           note={
             fc !== null ? (
               <>
-                Dashed: mean. Every event lies below <M tex="f_c" /> = {fixed(fc, 1)} pN, the force at which the paper's landscape barrier vanishes (section 05).
+                Dashed: mean. Every event lies below <M tex="f_c" /> = {fixed(fc, 1)} pN, the force at which the paper's landscape barrier vanishes (section 1.5).
               </>
             ) : (
               'Dashed: mean.'
@@ -86,7 +86,7 @@ export function EventsPanel({ version, defaultSmoothing, fc, onEvents }: { versi
                 <Tooltip content={<Tip unitX="pN" fmtX={(v) => v.toFixed(1)} rows={(p) => `${p.value} traces`} />} cursor={{ fill: 'rgba(0,0,0,0.03)' }} />
                 <Bar dataKey="n" fill={chart.accent} isAnimationActive={false} radius={[3, 3, 0, 0]} />
                 {d && <ReferenceLine x={d.f_crit_from_rate_pN.mean} stroke={chart.ink} strokeDasharray="3 3" />}
-                {fc !== null && <ReferenceLine x={fc} stroke={chart.model} label={{ value: 'f_c', position: 'top', fontSize: 11, fill: chart.model }} />}
+                {fc !== null && <ReferenceLine x={fc} stroke={chart.model} label={{ value: 'fc', position: 'top', fontSize: 11, fill: chart.model }} />}
               </BarChart>
             </ResponsiveContainer>
           </div>

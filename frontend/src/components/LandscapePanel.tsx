@@ -34,7 +34,7 @@ export function LandscapePanel({ paramSets, defaultSet, forceRate, meanCritForce
   const sp = stationary(land, f)
   const uf = barrier(land, f)
   const scale = energyUnit === 'kBT' ? 1 / KBT : 1
-  const unit = energyUnit === 'kBT' ? 'k_BT' : 'pN·Å'
+  const unit = energyUnit === 'kBT' ? 'kBT' : 'pN·Å'
 
   const dU = useDebounced(U, 250)
   const dXi = useDebounced(xi, 250)
@@ -56,7 +56,7 @@ export function LandscapePanel({ paramSets, defaultSet, forceRate, meanCritForce
 
   return (
     <Panel
-      index="05"
+      index="1.5"
       title="The landscape"
       lead={
         <>
@@ -78,7 +78,7 @@ export function LandscapePanel({ paramSets, defaultSet, forceRate, meanCritForce
         </div>
         <Slider label="barrier U‡" value={U} min={200} max={1200} step={1} onChange={setU} format={(v) => `${v.toFixed(0)} pN·Å · ${(v / KBT).toFixed(1)} kBT`} />
         <Slider label="barrier position ξ‡" value={xi} min={5} max={60} step={0.1} onChange={setXi} format={(v) => `${v.toFixed(1)} Å`} />
-        <Slider label="applied force f" value={fFrac} min={0} max={1.1} step={0.005} onChange={setFFrac} format={(v) => `${(v * fc).toFixed(1)} pN · ${(100 * v).toFixed(0)} % of f_c`} />
+        <Slider label="applied force f" value={fFrac} min={0} max={1.1} step={0.005} onChange={setFFrac} format={(v) => `${(v * fc).toFixed(1)} pN · ${(100 * v).toFixed(0)} % of fc`} />
         <div className="control">
           <span className="control__label">
             <span>energy unit</span>
@@ -114,7 +114,7 @@ export function LandscapePanel({ paramSets, defaultSet, forceRate, meanCritForce
           }
           note={
             <>
-              Slate: the equilibrium profile. Terracotta: tilted by the current force{tAtF !== null ? `, which the mean ramp reaches at t = ${fixed(tAtF, 1)} ps (with the ḟ chosen in section 03)` : ''}.
+              Slate: the equilibrium profile. Terracotta: tilted by the current force{tAtF !== null ? `, which the mean ramp reaches at t = ${fixed(tAtF, 1)} ps (with the force rate chosen in section 1.3)` : ''}.
               Dots mark the moving minimum and transition state; they meet at <M tex="f = f_c" />.
             </>
           }
@@ -170,7 +170,7 @@ export function LandscapePanel({ paramSets, defaultSet, forceRate, meanCritForce
                 <YNum label="F [pN]" />
                 <Tooltip content={<Tip unitX="Å" fmtX={(v) => v.toFixed(2)} rows={(p) => `${p.dataKey === 'F' ? 'F' : 'F + f'} = ${typeof p.value === 'number' ? p.value.toFixed(2) : '—'} pN`} />} />
                 <ReferenceLine y={0} stroke={chart.ink4} />
-                <ReferenceLine y={-fc} stroke={chart.model2} strokeDasharray="4 3" label={{ value: `−f_c = −${fc.toFixed(1)} pN`, position: 'insideBottomRight', fontSize: 11, fill: chart.model2 }} />
+                <ReferenceLine y={-fc} stroke={chart.model2} strokeDasharray="4 3" label={{ value: `−fc = −${fc.toFixed(1)} pN`, position: 'insideBottomRight', fontSize: 11, fill: chart.model2 }} />
                 <Line type="monotone" dataKey="F" stroke={chart.model} strokeWidth={1.5} dot={false} isAnimationActive={false} />
                 {f > 0 && <Line type="monotone" dataKey="Ff" stroke={chart.accent} strokeWidth={1.5} dot={false} isAnimationActive={false} />}
                 {sp && (
@@ -192,7 +192,7 @@ export function LandscapePanel({ paramSets, defaultSet, forceRate, meanCritForce
         <Readout label={<><M tex="\xi_{\min}" /> minimum</>} value={sp ? fixed(sp.xiMin, 2) : '—'} unit="Å" />
         <Readout label={<><M tex="\xi_{TS}" /> transition state</>} value={sp ? fixed(sp.xiTs, 2) : '—'} unit="Å" />
         <Readout label="curvature at well" value={fixed((6 * U) / xi ** 2, 2)} unit="pN/Å" />
-        {meanCritForce !== null && <Readout label="⟨f‡⟩ observed (04)" value={fixed(meanCritForce, 1)} unit={`pN · ${((100 * meanCritForce) / fc).toFixed(0)} % of f_c`} tone="accent" />}
+        {meanCritForce !== null && <Readout label={<><M tex="\langle f^\ddagger\rangle" /> observed (1.4)</>} value={fixed(meanCritForce, 1)} unit={`pN · ${((100 * meanCritForce) / fc).toFixed(0)} % of fc`} tone="accent" />}
         {crossCheck && (
           <Readout label="backend agreement" value={crossCheck.maxU < 1e-3 ? 'exact' : crossCheck.maxU.toExponential(1)} unit={`· dU/dξ check ${crossCheck.forceCheck.toExponential(1)} pN`} />
         )}

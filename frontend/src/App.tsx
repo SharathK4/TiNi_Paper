@@ -21,6 +21,8 @@ import { TracePanel } from './components/TracePanel'
 import { InversePage } from './components/inverse/InversePage'
 import { ForwardPage } from './components/forward/ForwardPage'
 import { fixed } from './lib/format'
+import { Fdot } from './components/Math'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 type Route = 'traces' | 'inverse' | 'forward'
 
@@ -47,16 +49,20 @@ export function App() {
     <main className="page">
       <nav className="nav" aria-label="versions">
         <a className={`nav__link ${route === 'traces' ? 'is-on' : ''}`} href="#traces">
-          <span className="nav__index">v1</span> Force traces &amp; landscape
+          <span className="nav__index">1</span> Force traces &amp; landscape
         </a>
         <a className={`nav__link ${route === 'inverse' ? 'is-on' : ''}`} href="#inverse">
-          <span className="nav__index">v2</span> Inverse problem
+          <span className="nav__index">2</span> Inverse problem
         </a>
         <a className={`nav__link ${route === 'forward' ? 'is-on' : ''}`} href="#forward">
-          <span className="nav__index">v3</span> Forward model
+          <span className="nav__index">3</span> Forward model
         </a>
       </nav>
-      {route === 'inverse' ? <InversePage /> : route === 'forward' ? <ForwardPage /> : <TracesPage />}
+      <ErrorBoundary name={route === 'inverse' ? 'Inverse problem' : route === 'forward' ? 'Forward model' : 'Force traces'}>
+        <ErrorBoundary name={route === 'inverse' ? 'Inverse problem' : route === 'forward' ? 'Forward model' : 'Force traces'}>
+        {route === 'inverse' ? <InversePage /> : route === 'forward' ? <ForwardPage /> : <TracesPage />}
+      </ErrorBoundary>
+      </ErrorBoundary>
     </main>
   )
 }
@@ -102,12 +108,12 @@ function TracesPage() {
           {fr && (
             <>
               {' '}
-              From the files: <b>ḟ = {fixed(fr.force_rate_pN_per_ps, 4)} pN/ps</b>
+              From the files: <b><Fdot /> = {fixed(fr.force_rate_pN_per_ps, 4)} pN/ps</b>
               {paperRate && <> against the paper's {fixed(paperRate, 4)}</>}.
             </>
           )}
         </p>
-        <p className="byline">Version 1 · basic physics model · after Maitra &amp; Gururajan, Sci. Rep. 15:3008 (2025)</p>
+        <p className="byline">Version 1 · force traces and the cubic landscape · after Maitra &amp; Gururajan, Sci. Rep. 15:3008 (2025)</p>
         <StatusStrip progress={progress} offline={offline} onRun={run} onCancel={cancel} />
       </header>
 
@@ -134,8 +140,8 @@ function TracesPage() {
       <SummaryPanel summary={summary.data} progress={progress} />
 
       <p className="footnote">
-        Data: <code>data/raw/Force_traces/property.T300.*.dat</code> — time [ps], box length Lₓ [Å], force per atom [pN]. Lₓ is the simulation box, not the
-        landscape coordinate ξ; the two are never used interchangeably here. Backend: FastAPI + NumPy, <code>backend/tini</code>. Checkpoints and static charts:{' '}
+        Data: <code>data/raw/Force_traces/property.T300.*.dat</code> — time [ps], box length [Å], force per atom [pN]. The box length is not the landscape
+        coordinate ξ; the two are never used interchangeably here. Backend: FastAPI + NumPy, <code>backend/tini</code>. Checkpoints and static charts:{' '}
         <code>artifacts/</code>.
       </p>
     </>

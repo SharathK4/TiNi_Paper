@@ -13,7 +13,7 @@ export function ResultsPanel({ result, profiles, boot }: { result: InvResult | n
   const lead = <>Three numbers with three kinds of uncertainty — and which of them this experiment can actually determine.</>
   if (!result) {
     return (
-      <Panel index="F" title="What was inferred" lead={lead}>
+      <Panel index="2.6" title="What was inferred" lead={lead}>
         <Empty>No run yet.</Empty>
       </Panel>
     )
@@ -22,7 +22,7 @@ export function ResultsPanel({ result, profiles, boot }: { result: InvResult | n
   const syn = 'skipped' in result.synthetic ? null : result.synthetic
 
   return (
-    <Panel index="F" title="What was inferred" lead={lead}>
+    <Panel index="2.6" title="What was inferred" lead={lead}>
       <div className="figure__title">parameters · maximum likelihood with three uncertainty estimates</div>
       <Table
         head={['parameter', 'MLE', '± s.e. (Fisher)', '95 % profile likelihood', '95 % bootstrap', 'paper, Table 1', 'unit']}
@@ -105,7 +105,7 @@ export function ResultsPanel({ result, profiles, boot }: { result: InvResult | n
         <div>
           <div className="figure__title">constrained fits · one parameter held at the paper's value</div>
           <Table
-            head={['held fixed', 'U‡', 'ξ‡', 'Γ₀', 'Δ(−ln L)', 'LR p']}
+            head={['held fixed', <M tex="U^\ddagger" />, <M tex="\xi^\ddagger" />, <M tex="\Gamma_0" />, <M tex="\Delta(-\ln L)" />, 'LR p']}
             rows={result.constrained.map((c) => [
               c.label.replace(' fixed at Table 1', ''),
               <span className="num">{c.fixed.U_barrier !== undefined ? <i>{fmtParam('U_barrier', c.params.U_barrier)}</i> : fmtParam('U_barrier', c.params.U_barrier)}</span>,
@@ -121,10 +121,10 @@ export function ResultsPanel({ result, profiles, boot }: { result: InvResult | n
             sensitivity to the Version 1 prototype choices
           </div>
           <Table
-            head={['varied', 'f‡ from', 'ḟ window', 'smoothing', 'ḟ', 'sample ⟨f‡⟩', 'U‡', 'ξ‡', 'Γ₀', 'f_c']}
+            head={['varied', 'f‡ from', 'rate window', 'smoothing', <M tex="\dot f" />, <>sample <M tex="\langle f^\ddagger\rangle" /></>, <M tex="U^\ddagger" />, <M tex="\xi^\ddagger" />, <M tex="\Gamma_0" />, <M tex="f_c" />]}
             rows={result.sensitivity.map((v) => [
               v.axis,
-              v.source === 'rate_x_time' ? 'ḟ·t‡' : 'peak',
+              v.source === 'rate_x_time' ? <M tex="\dot f\,t^\ddagger" /> : 'peak',
               `${v.window_ps} ps`,
               `${v.smoothing_points} pts`,
               <span className="num">{fixed(v.force_rate, 4)}</span>,
@@ -135,14 +135,14 @@ export function ResultsPanel({ result, profiles, boot }: { result: InvResult | n
               <span className="num">{fixed(v.f_c_pN, 1)}</span>,
             ])}
           />
-          <p className="figure__note">The ḟ window barely matters; the peak picker does — it moves the fit by about the whole gap to Table 1.</p>
+          <p className="figure__note">The force-rate window barely matters; the peak picker does — it moves the fit by about the whole gap to Table 1.</p>
         </div>
       </div>
 
       {syn && (
         <div style={{ marginTop: 30 }}>
           <div className="figure__title">
-            synthetic recovery · truth = Table 1 ({result.config.reference_set === 'pdf_mle' ? 'p(f|ḟ) fit' : '⟨f⟩(ḟ) fit'}), {syn.replicates} replicates per design
+            synthetic recovery · truth = Table 1 ({result.config.reference_set === 'pdf_mle' ? <M tex="p(f\mid\dot f)" /> : <M tex="\langle f\rangle(\dot f)" />} fit), {syn.replicates} replicates per design
           </div>
           <Table
             head={['design', 'events', 'U‡ median / truth', 'U‡ spread (decades, 16–84 %)', 'ξ‡ median / truth', 'ξ‡ spread', 'Γ₀ median / truth', 'Γ₀ spread', 'Γ₀ within ×2']}

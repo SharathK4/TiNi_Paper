@@ -187,3 +187,17 @@ CPU only.
 * 86 tests, `tsc -b`, `vite build` clean. Committed.
 * Open: moving absorbing boundary; second-order time stepping with
   positivity (e.g. TR-BDF2); no multi-rate data to fit the PDE directly.
+
+## Review pass (user feedback, 2026-09-17)
+* Forward route could blank: a section that threw during render took the
+  whole page with it. Each route is now wrapped in an error boundary, and
+  the density panel guards against snapshot arrays of unequal length (the
+  cause of the original crash was a stride mismatch in `observables.json`,
+  fixed at the source and regenerated for stored runs).
+* Symbols: `f` with a combining dot, angle brackets and subscript-x were set
+  in the system text font, which lacks the glyphs. All such symbols are now
+  typeset with KaTeX in text (segmented controls accept rich labels) and
+  spelled out in SVG axis labels.
+* The "prototype assumption" tag no longer sits mid-sentence.
+* Section 1.6 records now point to Versions 2 and 3 instead of "not in v1".
+* Sections numbered as chapters: 1.1–1.6, 2.1–2.7, 3.1–3.7.

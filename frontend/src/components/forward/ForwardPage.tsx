@@ -11,7 +11,7 @@ import { Bar, ComposedChart, ErrorBar, Line, ReferenceLine, ResponsiveContainer,
 import { useResource } from '../../api/hooks'
 import { forward, type FwdObservables, type FwdProgress, type FwdResolved, type FwdResult, type FwdRunList, type FwdSpec, type Level } from '../../api/forward'
 import { fixed, sci, secs } from '../../lib/format'
-import { Eq, M } from '../Math'
+import { Eq, Fdot, M, MeanF } from '../Math'
 import { Empty, Figure, Grid, Panel, Readout, Seg, Tip, XNum, YNum, chart } from '../ui'
 import { Table, XLog } from '../inverse/shared'
 
@@ -89,7 +89,7 @@ export function ForwardPage() {
           {res && (
             <>
               {' '}
-              Predicted <b>⟨f‡⟩ = {fixed(res.observables.mean_pN, 2)} pN</b> against Eq. (6)'s {fixed(res.observables.eq6.mean_pN, 2)} with the same parameters.
+              Predicted <b><MeanF /> = {fixed(res.observables.mean_pN, 2)} pN</b> against Eq. (6)'s {fixed(res.observables.eq6.mean_pN, 2)} with the same parameters.
             </>
           )}
         </p>
@@ -116,7 +116,7 @@ export function ForwardPage() {
 function ModelPanel({ res }: { res: FwdResult | null }) {
   const p = res?.parameters
   return (
-    <Panel index="A" title="The forward model" lead={<>The probability of the order parameter, pushed by thermal noise and pulled by a force that grows in time, until it leaves the well.</>}>
+    <Panel index="3.1" title="The forward model" lead={<>The probability of the order parameter, pushed by thermal noise and pulled by a force that grows in time, until it leaves the well.</>}>
       <div className="grid-2" style={{ alignItems: 'start' }}>
         <div className="prose">
           <Eq tag="paper · Einstein–Smoluchowski · verified" tex="\partial_t P(\xi,t) = \partial_\xi\, D\left[\partial_\xi P + \frac{1}{k_BT}\,\frac{\partial U}{\partial\xi}\,P\right],\qquad U(\xi,t) = U_0(\xi) - \dot f\,t\,\xi,\qquad D = \frac{k_BT}{\eta}" />
@@ -140,7 +140,7 @@ function ModelPanel({ res }: { res: FwdResult | null }) {
                     <M tex="U^\ddagger,\ \xi^\ddagger,\ \Gamma_0" />
                   </td>
                   <td className="num">
-                    {fixed(p.U_barrier_pN_A, 1)} pN·Å ({fixed(p.U_barrier_kBT, 1)} k_BT) · {fixed(p.xi_barrier_A, 2)} Å · {sci(p.gamma0_per_ps, 2)} ps⁻¹
+                    {fixed(p.U_barrier_pN_A, 1)} pN·Å ({fixed(p.U_barrier_kBT, 1)} <M tex="k_BT" />) · {fixed(p.xi_barrier_A, 2)} Å · {sci(p.gamma0_per_ps, 2)} ps⁻¹
                   </td>
                 </tr>
                 <tr>
@@ -154,26 +154,26 @@ function ModelPanel({ res }: { res: FwdResult | null }) {
                 <tr>
                   <td>Time scales</td>
                   <td className="num">
-                    well relaxation {fixed(p.tau_well_ps, 3)} ps · diffusion over ξ‡ {fixed(p.tau_diffusion_ps, 1)} ps · ramp to f_c {fixed(res?.t_end_ps, 0)} ps
+                    well relaxation {fixed(p.tau_well_ps, 3)} ps · diffusion over <M tex="\xi^\ddagger" /> {fixed(p.tau_diffusion_ps, 1)} ps · ramp to <M tex="f_c" /> {fixed(res?.t_end_ps, 0)} ps
                   </td>
                 </tr>
                 <tr>
                   <td>Loading</td>
                   <td className="num">
-                    ḟ = {fixed(res?.force_rate_pN_per_ps, 4)} pN/ps ({res?.force_rate_provenance.source === 'v1' ? 'measured in Version 1' : 'user-specified'})
+                    <Fdot /> = {fixed(res?.force_rate_pN_per_ps, 4)} pN/ps ({res?.force_rate_provenance.source === 'v1' ? 'measured in Version 1' : 'user-specified'})
                   </td>
                 </tr>
                 <tr>
                   <td>Boundary</td>
                   <td className="num">
-                    {res?.boundary.boundary === 'barrier_top' ? 'absorbing at ξ‡' : `absorbing beyond the barrier, ${res?.boundary.margin_kBT} k_BT below the top`} · ξ_A = {fixed(res?.boundary.xi_A_A, 2)} Å ·
-                    reflecting at ξ_L = {fixed(res?.boundary.xi_L_A, 1)} Å ({fixed(res?.boundary.U0_at_xi_L_kBT, 0)} k_BT up)
+                    {res?.boundary.boundary === 'barrier_top' ? <>absorbing at <M tex="\xi^\ddagger" /></> : <>absorbing beyond the barrier, {res?.boundary.margin_kBT} <M tex="k_BT" /> below the top</>} · <M tex="\xi_A" /> = {fixed(res?.boundary.xi_A_A, 2)} Å ·
+                    reflecting at <M tex="\xi_L" /> = {fixed(res?.boundary.xi_L_A, 1)} Å ({fixed(res?.boundary.U0_at_xi_L_kBT, 0)} <M tex="k_BT" /> up)
                   </td>
                 </tr>
               </tbody>
             </table>
           ) : (
-            <Empty>No forward run yet — section B.</Empty>
+            <Empty>No forward run yet — section 3.2.</Empty>
           )}
         </div>
       </div>
@@ -210,7 +210,7 @@ function RunPanel({ spec, progress, runs, selectedRun, onSelectRun, onRun, onCan
   }
 
   return (
-    <Panel index="B" title="Running the model" lead={<>Choose where the three parameters come from, where the density is absorbed, and how finely to resolve ξ and t.</>}>
+    <Panel index="3.2" title="Running the model" lead={<>Choose where the three parameters come from, where the density is absorbed, and how finely to resolve ξ and t.</>}>
       <div className="grid-2" style={{ alignItems: 'start' }}>
         <div>
           <div className="controls">
@@ -223,8 +223,8 @@ function RunPanel({ spec, progress, runs, selectedRun, onSelectRun, onRun, onCan
                 onChange={setSource}
                 options={[
                   { value: 'inverse:latest', label: 'Version 2 fit' },
-                  { value: 'paper:pdf_mle', label: 'paper, p(f|ḟ)' },
-                  { value: 'paper:mean_lsq', label: 'paper, ⟨f⟩(ḟ)' },
+                  { value: 'paper:pdf_mle', label: <>paper, <M tex="p(f\mid\dot f)" /></> },
+                  { value: 'paper:mean_lsq', label: <>paper, <M tex="\langle f\rangle(\dot f)" /></> },
                   { value: 'custom', label: 'custom' },
                 ]}
               />
@@ -238,7 +238,7 @@ function RunPanel({ spec, progress, runs, selectedRun, onSelectRun, onRun, onCan
                 onChange={setBoundary}
                 options={[
                   { value: 'beyond_barrier', label: 'beyond the barrier' },
-                  { value: 'barrier_top', label: 'at ξ‡ (paper, literal)' },
+                  { value: 'barrier_top', label: <>at <M tex="\xi^\ddagger" /> (paper, literal)</> },
                 ]}
               />
             </div>
@@ -255,7 +255,7 @@ function RunPanel({ spec, progress, runs, selectedRun, onSelectRun, onRun, onCan
             <NumberField label="time steps" value={steps} min={500} max={400000} step={500} onChange={setSteps} />
             <label className="control" style={{ minWidth: 160 }}>
               <span className="control__label">
-                <span>ḟ [pN/ps] · blank = Version 1</span>
+                <span>force rate [pN/ps] · blank = Version 1</span>
               </span>
               <input className="numfield num" type="text" value={rate} placeholder={resolved.data ? fixed(resolved.data.force_rate_pN_per_ps, 4) : ''} onChange={(e) => setRate(e.target.value)} />
             </label>
@@ -271,7 +271,7 @@ function RunPanel({ spec, progress, runs, selectedRun, onSelectRun, onRun, onCan
           {resolved.missing && source.startsWith('inverse') && <p className="figure__note">No Version 2 run exists yet; choose paper or custom parameters.</p>}
           <p className="figure__note">
             Validation, grid/time refinement and the seven-rate spectrum are included (about 12 s in total). Backward Euler, unconditionally stable; the time step
-            is chosen for accuracy, and its effect is measured in section F.
+            is chosen for accuracy, and its effect is measured in section 3.6.
           </p>
           <div style={{ display: 'flex', gap: 10, marginTop: 24, alignItems: 'center' }}>
             {running ? (
@@ -326,8 +326,8 @@ function RunPanel({ spec, progress, runs, selectedRun, onSelectRun, onRun, onCan
                     <th>finished</th>
                     <th>parameters</th>
                     <th>boundary</th>
-                    <th>ḟ</th>
-                    <th>⟨f‡⟩</th>
+                    <th><Fdot /></th>
+                    <th><MeanF /></th>
                     <th>cells × steps</th>
                   </tr>
                 </thead>
@@ -373,7 +373,7 @@ function DensityPanel({ res, obs }: { res: FwdResult | null; obs: FwdObservables
   const [frac, setFrac] = useState(0.6)
   const snaps = obs?.snapshots
   const pick = useMemo(() => {
-    if (!snaps || !res) return []
+    if (!snaps || !res || !snaps.P?.length || snaps.P.length !== snaps.f_pN.length) return []
     const fc = res.parameters.f_c_pN
     const want = [0, 0.3, 0.5, frac, 0.8].map((x) => x * fc)
     return want.map((f) => {
@@ -385,7 +385,7 @@ function DensityPanel({ res, obs }: { res: FwdResult | null; obs: FwdObservables
     if (!snaps || !pick.length) return []
     return snaps.xi_A.map((x, i) => {
       const row: Record<string, number> = { xi: x }
-      pick.forEach((s, k) => (row[`p${k}`] = s.P[i]))
+      pick.forEach((s, k) => (row[`p${k}`] = s.P?.[i] ?? 0))
       return row
     })
   }, [snaps, pick])
@@ -393,21 +393,21 @@ function DensityPanel({ res, obs }: { res: FwdResult | null; obs: FwdObservables
   const lead = <>Five moments of the same density as the force rises: it leans toward the barrier, thins, and is gone by the time the barrier is.</>
   if (!res || !obs) {
     return (
-      <Panel index="C" title="The density in motion" lead={lead}>
+      <Panel index="3.3" title="The density in motion" lead={lead}>
         <Empty>No run yet.</Empty>
       </Panel>
     )
   }
   const shades = ['#2f3a63', '#4a5680', '#6b77a8', '#b5462a', '#a5a9bd']
   return (
-    <Panel index="C" title="The density in motion" lead={lead}>
+    <Panel index="3.3" title="The density in motion" lead={lead}>
       <div className="grid-2">
-        <Figure title={<><M tex="P(\xi,t)" /> at five forces · terracotta is adjustable</>} note={`Dashed: the absorbing boundary at ξ_A = ${fixed(res.boundary.xi_A_A, 1)} Å. Density is not renormalised; what is missing has been absorbed.`}>
+        <Figure title={<><M tex="P(\xi,t)" /> at five forces · terracotta is adjustable</>} note={<>Dashed: the absorbing boundary at <M tex="\xi_A" /> = {fixed(res.boundary.xi_A_A, 1)} Å. Density is not renormalised; what is missing has been absorbed.</>}>
           <div className="controls" style={{ marginBottom: 12 }}>
             <label className="control">
               <span className="control__label">
                 <span>highlighted snapshot</span>
-                <b>{fixed(frac * res.parameters.f_c_pN, 1)} pN · {(100 * frac).toFixed(0)} % of f_c</b>
+                <b>{fixed(frac * res.parameters.f_c_pN, 1)} pN · {(100 * frac).toFixed(0)} % of fc</b>
               </span>
               <input type="range" min={0} max={1} step={0.01} value={frac} onChange={(e) => setFrac(Number(e.target.value))} />
             </label>
@@ -428,12 +428,12 @@ function DensityPanel({ res, obs }: { res: FwdResult | null; obs: FwdObservables
             </ResponsiveContainer>
           </div>
         </Figure>
-        <Figure title={<>survival <M tex="\Psi(t)" /> against the applied force</>} note={`Reaches ${sci(res.observables.residual_mass, 1)} at f_c: the residual mass that would transition deterministically when the barrier vanishes.`}>
+        <Figure title={<>survival <M tex="\Psi(t)" /> against the applied force</>} note={<>Reaches {sci(res.observables.residual_mass, 1)} at <M tex="f_c" />: the residual mass that would transition deterministically when the barrier vanishes.</>}>
           <div className="chart chart--tall">
             <ResponsiveContainer>
               <ComposedChart data={surv} margin={chart.margin}>
                 <Grid />
-                <XNum dataKey="f" label="f = ḟ t [pN]" range={[0, Math.ceil(res.parameters.f_c_pN / 5) * 5]} />
+                <XNum dataKey="f" label="applied force f [pN]" range={[0, Math.ceil(res.parameters.f_c_pN / 5) * 5]} />
                 <YNum label="Ψ" range={[0, 1]} />
                 <Tooltip content={<Tip unitX="pN" fmtX={(v) => v.toFixed(1)} rows={(p) => `Ψ = ${typeof p.value === 'number' ? p.value.toFixed(3) : ''}`} />} />
                 <Line dataKey="s" type="monotone" stroke={chart.model} strokeWidth={1.6} dot={false} isAnimationActive={false} />
@@ -455,7 +455,7 @@ function ObservablePanel({ res, obs }: { res: FwdResult | null; obs: FwdObservab
   const lead = <>The critical-force density from the dynamics, beside the paper's closed form for the same parameters, and beside the hundred measured forces.</>
   if (!res || !obs) {
     return (
-      <Panel index="D" title="The predicted observable" lead={lead}>
+      <Panel index="3.4" title="The predicted observable" lead={lead}>
         <Empty>No run yet.</Empty>
       </Panel>
     )
@@ -463,7 +463,7 @@ function ObservablePanel({ res, obs }: { res: FwdResult | null; obs: FwdObservab
   const o = res.observables
   const xr: [number, number] = [0, Math.ceil(res.parameters.f_c_pN / 5) * 5]
   return (
-    <Panel index="D" title="The predicted observable" lead={lead}>
+    <Panel index="3.4" title="The predicted observable" lead={lead}>
       <div className="grid-2">
         <Figure title={<>density <M tex="p(f\mid\dot f)" /> · PDE (slate), Eq. 6 (dashed), sample (terracotta)</>} note="Same U‡, ξ‡, Γ₀ in both curves. The sample histogram is Version 1's; bars ± √n.">
           <div className="chart chart--tall">
@@ -500,10 +500,10 @@ function ObservablePanel({ res, obs }: { res: FwdResult | null; obs: FwdObservab
         </Figure>
       </div>
       <div className="readouts">
-        <Readout label="PDE ⟨f‡⟩, s.d." value={`${fixed(o.mean_pN, 2)}, ${fixed(o.sd_pN, 2)}`} unit="pN" tone="model" />
-        <Readout label="Eq. 6 ⟨f‡⟩, s.d." value={`${fixed(o.eq6.mean_pN, 2)}, ${fixed(o.eq6.sd_pN, 2)}`} unit="pN" />
-        <Readout label="Eq. 8 ⟨f‡⟩" value={fixed(o.eq6.mean_eq8_pN, 2)} unit="pN" />
-        {hasData && <Readout label="sample ⟨f‡⟩, s.d." value={`${fixed(dc.sample_mean_pN, 2)}, ${fixed(dc.sample_sd_pN, 2)}`} unit={`pN · n = ${dc.n}`} tone="accent" />}
+        <Readout label={<>PDE <MeanF />, s.d.</>} value={`${fixed(o.mean_pN, 2)}, ${fixed(o.sd_pN, 2)}`} unit="pN" tone="model" />
+        <Readout label={<>Eq. 6 <MeanF />, s.d.</>} value={`${fixed(o.eq6.mean_pN, 2)}, ${fixed(o.eq6.sd_pN, 2)}`} unit="pN" />
+        <Readout label={<>Eq. 8 <MeanF /></>} value={fixed(o.eq6.mean_eq8_pN, 2)} unit="pN" />
+        {hasData && <Readout label={<>sample <MeanF />, s.d.</>} value={`${fixed(dc.sample_mean_pN, 2)}, ${fixed(dc.sample_sd_pN, 2)}`} unit={`pN · n = ${dc.n}`} tone="accent" />}
         {hasData && <Readout label="ln L of sample · PDE / Eq. 6" value={`${fixed(dc.log_likelihood_pde, 1)} / ${fixed(dc.log_likelihood_eq6, 1)}`} />}
         {hasData && <Readout label="KS D, sample vs PDE" value={fixed(dc.ks_D_vs_pde, 3)} />}
         <Readout label={<M tex="\psi(f_c)" />} value={sci(o.residual_mass, 1)} />
@@ -527,20 +527,20 @@ function SpectrumPanel({ res, spec }: { res: FwdResult | null; spec: FwdSpec | n
   const lead = <>The same parameters at the paper's seven loading rates: the PDE's mean critical force beside Eq. (8), Eq. (6) and the paper's figure.</>
   if (!rows) {
     return (
-      <Panel index="E" title="The force spectrum" lead={lead}>
+      <Panel index="3.5" title="The force spectrum" lead={lead}>
         <Empty>No spectrum in this run.</Empty>
       </Panel>
     )
   }
   return (
-    <Panel index="E" title="The force spectrum" lead={lead}>
+    <Panel index="3.5" title="The force spectrum" lead={lead}>
       <Figure title={<><M tex="\langle f^\ddagger\rangle(\dot f)" /> · PDE (slate points), Eq. 8 (line), Eq. 6 exact (dotted)</>} note="Grey: the paper's Fig. 3 symbols read by eye, ± 1 pN. Terracotta: this dataset. The PDE sits above the closed forms by an amount that grows with rate — the transit past the barrier that the steady-flux approximation neglects.">
         <div className="chart chart--tall">
           <ResponsiveContainer>
             <ComposedChart data={data} margin={chart.margin}>
               <Grid />
-              <XLog dataKey="x" label="ḟ [pN/ps]" lo={2e-3} hi={2} />
-              <YNum label="⟨f‡⟩ [pN]" range={[5, 35]} />
+              <XLog dataKey="x" label="force rate [pN/ps]" lo={2e-3} hi={2} />
+              <YNum label="mean f‡ [pN]" range={[5, 35]} />
               <Tooltip content={<Tip unitX="pN/ps" fmtX={(v) => sci(v, 2)} rows={(p) => `${p.name ?? p.dataKey}: ${typeof p.value === 'number' ? p.value.toFixed(2) : ''} pN`} />} />
               <Line dataKey="eq8" name="Eq. 8" type="monotone" stroke={chart.model2} strokeWidth={1.4} dot={false} isAnimationActive={false} />
               <Line dataKey="eq6" name="Eq. 6 exact" type="monotone" stroke={chart.model2} strokeWidth={1} strokeDasharray="2 3" dot={false} isAnimationActive={false} />
@@ -556,7 +556,7 @@ function SpectrumPanel({ res, spec }: { res: FwdResult | null; spec: FwdSpec | n
         </div>
       </Figure>
       <Table
-        head={['rate', 'ḟ [pN/ps]', 'PDE ⟨f‡⟩', 'PDE s.d.', 'Eq. 6', 'Eq. 8', 'PDE − Eq. 6', 'ψ(f_c)']}
+        head={['rate', <><Fdot /> [pN/ps]</>, <>PDE <MeanF /></>, 'PDE s.d.', 'Eq. 6', 'Eq. 8', 'PDE − Eq. 6', <M tex="\psi(f_c)" />]}
         rows={rows.map((r) => [
           r.index,
           <span className="num">{sci(r.force_rate, 3)}</span>,
@@ -579,14 +579,14 @@ function ValidationPanel({ res }: { res: FwdResult | null }) {
   const lead = <>What the solver is known to get exactly right, what it gets right to a stated tolerance, and how the answer moves with resolution.</>
   if (!res) {
     return (
-      <Panel index="F" title="Numerical validation" lead={lead}>
+      <Panel index="3.6" title="Numerical validation" lead={lead}>
         <Empty>No run yet.</Empty>
       </Panel>
     )
   }
   const levelRows = (levels: Level[]) => levels.map((l) => [<span className="num">{l.n_cells}</span>, <span className="num">{l.n_steps}</span>, <span className="num">{fixed(l.h_A, 3)}</span>, <span className="num">{sci(l.dt_ps, 2)}</span>, <span className="num">{fixed(l.mean_pN, 4)}</span>, <span className="num">{l.l1_vs_previous !== undefined ? sci(l.l1_vs_previous, 2) : '—'}</span>, <span className="num">{l.mean_change_pN !== undefined ? sci(l.mean_change_pN, 2) : '—'}</span>])
   return (
-    <Panel index="F" title="Numerical validation" lead={lead}>
+    <Panel index="3.6" title="Numerical validation" lead={lead}>
       {v && (
         <Table
           head={['test', 'statement', 'benchmark', 'result']}
@@ -594,9 +594,9 @@ function ValidationPanel({ res }: { res: FwdResult | null }) {
             ['A conservation', 'Ψ + absorbed = 1 at every step', 'identity of the scheme', <span className="num">max deviation {sci(v.A_B_conservation_positivity.conservation_error_max, 1)}</span>],
             ['B positivity', 'P ≥ 0 everywhere, no clipping', 'M-matrix property', <span className="num">min P = {sci(v.A_B_conservation_positivity.min_density, 1)} /Å</span>],
             ['C1 equilibrium', 'Boltzmann density stationary (both walls reflecting)', 'exact', <span className="num">L1 drift {sci(v.C1_reflecting_equilibrium.l1_drift, 1)} over {v.C1_reflecting_equilibrium.t_end_ps} ps</span>],
-            ...v.C2_mfpt_exact.map((m, i) => [`C2 first passage${i ? ' (at ξ‡)' : ''}`, `mean first-passage time at fixed f = ${fixed(m.force_pN, 1)} pN (${fixed(m.barrier_remaining_kBT, 1)} k_BT barrier)`, 'exact 1-D quadrature formula', <span className="num">{fixed(m.tau_pde_ps, 2)} vs {fixed(m.tau_exact_ps, 2)} ps · {(100 * m.relative_error).toFixed(2)} %</span>]),
+            ...v.C2_mfpt_exact.map((m, i) => [`C2 first passage${i ? ' (at ξ‡)' : ''}`, <>mean first-passage time at fixed f = {fixed(m.force_pN, 1)} pN ({fixed(m.barrier_remaining_kBT, 1)} <M tex="k_BT" /> barrier)</>, 'exact 1-D quadrature formula', <span className="num">{fixed(m.tau_pde_ps, 2)} vs {fixed(m.tau_exact_ps, 2)} ps · {(100 * m.relative_error).toFixed(2)} %</span>]),
             ['C3 diffusion', 'U ≡ 0: variance grows as 2Dt', 'analytic', <span className="num">{(100 * v.C3_free_diffusion.relative_error).toExponential(1)} %</span>],
-            ...v.F_kramers.placements.map((p) => [`F Kramers · ${p.placement.replace('_', ' ')}`, `escape rate at fixed f = ${fixed(v.F_kramers.force_pN, 1)} pN (${fixed(v.F_kramers.barrier_remaining_kBT, 1)} k_BT), absorbing at ξ = ${fixed(p.xi_A_A, 1)} Å`, "paper's Γ(f), Eq. 4", <span className="num">Γ_PDE / Γ_Eq4 = {fixed(p.ratio_pde_over_eq4, 3)}</span>]),
+            ...v.F_kramers.placements.map((p) => [`F Kramers · ${p.placement.replace('_', ' ')}`, <>escape rate at fixed f = {fixed(v.F_kramers.force_pN, 1)} pN ({fixed(v.F_kramers.barrier_remaining_kBT, 1)} <M tex="k_BT" />), absorbing at ξ = {fixed(p.xi_A_A, 1)} Å</>, "paper's Γ(f), Eq. 4", <span className="num"><M tex="\Gamma_{\mathrm{PDE}}/\Gamma_{\mathrm{Eq.\,4}}" /> = {fixed(p.ratio_pde_over_eq4, 3)}</span>]),
             ['G reproducibility', 'identical arrays on rerun', 'bitwise', v.G_reproducibility.identical_survival && v.G_reproducibility.identical_snapshots ? 'identical' : `differs by ${sci(v.G_reproducibility.max_abs_diff, 1)}`],
           ]}
         />
@@ -609,16 +609,16 @@ function ValidationPanel({ res }: { res: FwdResult | null }) {
         <div className="grid-2" style={{ marginTop: 36, alignItems: 'start' }}>
           <div>
             <div className="figure__title">grid refinement · observed order {fixed(c.grid_order, 2)} · Richardson error {sci(c.richardson_grid_pN, 1)} pN</div>
-            <Table head={['cells', 'steps', 'h [Å]', 'Δt [ps]', '⟨f‡⟩ [pN]', 'L1 vs coarser', 'Δ⟨f‡⟩']} rows={levelRows(c.grid_levels)} />
+            <Table head={['cells', 'steps', 'h [Å]', 'Δt [ps]', <><MeanF /> [pN]</>, 'L1 vs coarser', <>Δ<MeanF /></>]} rows={levelRows(c.grid_levels)} />
           </div>
           <div>
             <div className="figure__title">time refinement · observed order {fixed(c.time_order, 2)} · Richardson error {sci(c.richardson_time_pN, 1)} pN</div>
-            <Table head={['cells', 'steps', 'h [Å]', 'Δt [ps]', '⟨f‡⟩ [pN]', 'L1 vs coarser', 'Δ⟨f‡⟩']} rows={levelRows(c.time_levels)} />
+            <Table head={['cells', 'steps', 'h [Å]', 'Δt [ps]', <><MeanF /> [pN]</>, 'L1 vs coarser', <>Δ<MeanF /></>]} rows={levelRows(c.time_levels)} />
           </div>
         </div>
       )}
       <p className="figure__note">
-        Second order in ξ (Scharfetter–Gummel), first order in t (backward Euler); the Richardson estimates bound the discretisation error of ⟨f‡⟩ for this run,
+        Second order in ξ (Scharfetter–Gummel), first order in t (backward Euler); the Richardson estimates bound the discretisation error of <MeanF /> for this run,
         which is far below the 0.2–0.3 pN by which the PDE differs from Eq. (6). There is no closed-form solution for the ramped problem; C2 is the exact benchmark.
       </p>
     </Panel>
@@ -630,14 +630,14 @@ function RecordPanel({ res, spec }: { res: FwdResult | null; spec: FwdSpec | nul
   const [show, setShow] = useState(false)
   if (!res) {
     return (
-      <Panel index="G" title="The record" lead={<>Provenance of every number above.</>}>
+      <Panel index="3.7" title="The record" lead={<>Provenance of every number above.</>}>
         <Empty>No run yet.</Empty>
       </Panel>
     )
   }
   const stale = spec && spec.code_hash !== res.code_hash
   return (
-    <Panel index="G" title="The record" lead={<>Provenance of every number above.</>}>
+    <Panel index="3.7" title="The record" lead={<>Provenance of every number above.</>}>
       <table className="facts">
         <tbody>
           <tr>

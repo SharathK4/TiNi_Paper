@@ -1,6 +1,6 @@
 import type { Progress, Summary } from '../api/client'
 import { fixed, secs } from '../lib/format'
-import { M } from './Math'
+import { Fdot, M, MeanT } from './Math'
 import { Panel } from './ui'
 
 /* The experiment on paper, what this version verified against it, and the
@@ -8,7 +8,7 @@ import { Panel } from './ui'
 export function SummaryPanel({ summary, progress }: { summary: Summary | null; progress: Progress | null }) {
   const s = summary
   return (
-    <Panel index="06" title="The record" lead="What the simulation was, what this version established from the files, and where every number came from.">
+    <Panel index="1.6" title="The record" lead="What the simulation was, what this version established from the files, and where every number came from.">
       <div className="grid-2" style={{ alignItems: 'start' }}>
         <div>
           <div className="figure__title">The experiment, from the paper</div>
@@ -99,7 +99,7 @@ export function SummaryPanel({ summary, progress }: { summary: Summary | null; p
                     prototype
                   </span>
                 </td>
-                <td>The fit window for ḟ (paper: "a small time interval near t = 0"; here 100 ps by default, with the sensitivity shown).</td>
+                <td>The fit window for <Fdot /> (paper: "a small time interval near t = 0"; here 100 ps by default, with the sensitivity shown).</td>
               </tr>
               <tr>
                 <td>
@@ -111,12 +111,22 @@ export function SummaryPanel({ summary, progress }: { summary: Summary | null; p
               </tr>
               <tr>
                 <td>
-                  <span className="tag" style={{ marginLeft: 0 }}>
-                    not in v1
+                  <span className="tag tag--inferred" style={{ marginLeft: 0 }}>
+                    version 2
                   </span>
                 </td>
                 <td>
-                  Fitting <M tex="U^\ddagger, \xi^\ddagger, \Gamma_0" /> from the data (inverse problem, Eq. 6/8) and the Smoluchowski dynamics — Versions 2 and 3.
+                  Fitting <M tex="U^\ddagger, \xi^\ddagger, \Gamma_0" /> to these events by maximum likelihood (paper Eq. 6) — <a href="#inverse">the inverse problem</a>.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <span className="tag tag--inferred" style={{ marginLeft: 0 }}>
+                    version 3
+                  </span>
+                </td>
+                <td>
+                  Integrating the paper's Smoluchowski equation on this landscape — <a href="#forward">the forward model</a>.
                 </td>
               </tr>
             </tbody>
@@ -140,7 +150,7 @@ export function SummaryPanel({ summary, progress }: { summary: Summary | null; p
                   <td>{s.inspection ? `${s.inspection.extension_rate_A_per_ps?.toExponential(4)} Å/ps` : '—'}</td>
                 </tr>
                 <tr>
-                  <td>Force rate ḟ</td>
+                  <td>Force rate <Fdot /></td>
                   <td>
                     {s.force_rate ? `${fixed(s.force_rate.force_rate_pN_per_ps, 4)} ± ${fixed(s.force_rate.force_rate_se, 4)} pN/ps (t ≤ ${s.force_rate.window_ps} ps, R² ${fixed(s.force_rate.r2, 3)})` : '—'}
                   </td>
@@ -150,17 +160,17 @@ export function SummaryPanel({ summary, progress }: { summary: Summary | null; p
                   <td>{s.force_rate ? `${fixed(s.force_rate.mean_trace_max_pN, 2)} pN at ${fixed(s.force_rate.mean_trace_argmax_ps, 1)} ps` : '—'}</td>
                 </tr>
                 <tr>
-                  <td>⟨t‡⟩</td>
+                  <td><MeanT /></td>
                   <td>{s.events ? `${fixed(s.events.t_peak_ps.mean, 1)} ± ${fixed(s.events.t_peak_ps.std, 1)} ps (n = ${s.events.n})` : '—'}</td>
                 </tr>
                 <tr>
-                  <td>⟨f‡⟩ = ḟ⟨t‡⟩</td>
+                  <td><M tex="\langle f^\ddagger\rangle = \dot f\,\langle t^\ddagger\rangle" /></td>
                   <td>{s.events ? `${fixed(s.events.f_crit_from_rate_pN.mean, 2)} ± ${fixed(s.events.f_crit_from_rate_pN.std, 2)} pN` : '—'}</td>
                 </tr>
                 {s.potential &&
                   Object.entries(s.potential).map(([k, v]) => (
                     <tr key={k}>
-                      <td>f_c · {k === 'pdf_mle' ? 'Table 1, p(f|ḟ) fit' : 'Table 1, ⟨f⟩(ḟ) fit'}</td>
+                      <td><M tex="f_c" /> · Table 1, {k === 'pdf_mle' ? <M tex="p(f\mid\dot f)" /> : <M tex="\langle f\rangle(\dot f)" />} fit</td>
                       <td>
                         {fixed(v.parameters.f_c_pN, 2)} pN · barrier {fixed(v.parameters.U_barrier_kBT, 1)} k<sub>B</sub>T
                       </td>

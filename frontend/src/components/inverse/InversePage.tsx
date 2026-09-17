@@ -14,6 +14,7 @@ import { api, type Config } from '../../api/client'
 import { useResource } from '../../api/hooks'
 import { inverse, type InvBootstrap, type InvDiagnostics, type InvFit, type InvProfiles, type InvProgress, type InvResult, type InvRunList, type InvSample, type InvSpec } from '../../api/inverse'
 import { fixed } from '../../lib/format'
+import { M } from '../Math'
 import { ComparisonPanel } from './ComparisonPanel'
 import { ModelPanel } from './ModelPanel'
 import { ObservedPanel } from './ObservedPanel'
@@ -113,8 +114,8 @@ export function InversePage() {
           {res && (
             <>
               {' '}
-              Inferred: <b>U‡ = {fmtParam('U_barrier', res.fit.params.U_barrier)} pN·Å</b>, <b>ξ‡ = {fmtParam('xi_barrier', res.fit.params.xi_barrier)} Å</b>,{' '}
-              <b>Γ₀ = {fmtParam('gamma0', res.fit.params.gamma0)} ps⁻¹</b> — f_c = {fixed(res.fit.derived.f_c_pN, 1)} pN.
+              Inferred: <b><M tex="U^\ddagger" /> = {fmtParam('U_barrier', res.fit.params.U_barrier)} pN·Å</b>, <b><M tex="\xi^\ddagger" /> = {fmtParam('xi_barrier', res.fit.params.xi_barrier)} Å</b>,{' '}
+              <b><M tex="\Gamma_0" /> = {fmtParam('gamma0', res.fit.params.gamma0)} ps⁻¹</b> — <M tex="f_c" /> = {fixed(res.fit.derived.f_c_pN, 1)} pN.
             </>
           )}
         </p>

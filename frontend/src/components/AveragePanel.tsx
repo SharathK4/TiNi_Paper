@@ -3,7 +3,7 @@ import { Area, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip 
 import { api, type Average } from '../api/client'
 import { useDebounced, useResource } from '../api/hooks'
 import { fixed } from '../lib/format'
-import { Eq, M } from './Math'
+import { Eq, Fdot, M } from './Math'
 import { Empty, Figure, Grid, Panel, Readout, Slider, Tip, XNum, YNum, chart } from './ui'
 
 export function AveragePanel({ version, defaultWindow, paperRate, onRate }: { version: number; defaultWindow: number; paperRate: number | null; onRate: (r: number) => void }) {
@@ -43,16 +43,16 @@ export function AveragePanel({ version, defaultWindow, paperRate, onRate }: { ve
 
   if (avg.missing) {
     return (
-      <Panel index="03" title="The average" lead={lead}>
+      <Panel index="1.3" title="The average" lead={lead}>
         <Empty>Run the pipeline to compute the ensemble average.</Empty>
       </Panel>
     )
   }
 
   return (
-    <Panel index="03" title="The average" lead={lead}>
+    <Panel index="1.3" title="The average" lead={lead}>
       <div className="controls">
-        <Slider label="fit window for ḟ" value={window} min={10} max={300} step={5} onChange={setWindow} format={(v) => `t ≤ ${v} ps`} />
+        <Slider label={<>fit window for <Fdot /></>} value={window} min={10} max={300} step={5} onChange={setWindow} format={(v) => `t ≤ ${v} ps`} />
       </div>
 
       <div className="grid-2">
@@ -65,7 +65,7 @@ export function AveragePanel({ version, defaultWindow, paperRate, onRate }: { ve
               <ComposedChart data={data} margin={chart.margin}>
                 <Grid />
                 <XNum dataKey="t" label="t [ps]" range={tRange} />
-                <YNum label="⟨f⟩ [pN]" />
+                <YNum label="mean f [pN]" />
                 <Tooltip
                   content={
                     <Tip
@@ -74,7 +74,7 @@ export function AveragePanel({ version, defaultWindow, paperRate, onRate }: { ve
                       rows={(p) => {
                         if (p.dataKey === 'band') return null
                         const v = typeof p.value === 'number' ? p.value.toFixed(2) : '—'
-                        return p.dataKey === 'mean' ? `⟨f⟩ = ${v} pN` : p.dataKey === 'fit' ? `fit = ${v} pN` : null
+                        return p.dataKey === 'mean' ? `mean = ${v} pN` : p.dataKey === 'fit' ? `fit = ${v} pN` : null
                       }}
                     />
                   }
@@ -88,14 +88,14 @@ export function AveragePanel({ version, defaultWindow, paperRate, onRate }: { ve
           </div>
         </Figure>
 
-        <Figure title="mean force against mean box length" note={<>The same curve against the imposed deformation rather than time. <M tex="L_x" /> is the box length, not the landscape coordinate <M tex="\xi" /> of section 05.</>}>
+        <Figure title="mean force against mean box length" note={<>The same curve against the imposed deformation rather than time. The box length <M tex="L_x" /> is not the landscape coordinate <M tex="\xi" /> of section 1.5.</>}>
           <div className="chart chart--tall">
             <ResponsiveContainer>
               <ComposedChart data={data} margin={chart.margin}>
                 <Grid />
-                <XNum dataKey="x" label="⟨Lₓ⟩ [Å]" />
-                <YNum label="⟨f⟩ [pN]" />
-                <Tooltip content={<Tip unitX="Å" fmtX={(v) => v.toFixed(3)} rows={(p) => (p.dataKey === 'mean' ? `⟨f⟩ = ${typeof p.value === 'number' ? p.value.toFixed(2) : '—'} pN` : null)} />} />
+                <XNum dataKey="x" label="mean box length [Å]" />
+                <YNum label="mean f [pN]" />
+                <Tooltip content={<Tip unitX="Å" fmtX={(v) => v.toFixed(3)} rows={(p) => (p.dataKey === 'mean' ? `mean = ${typeof p.value === 'number' ? p.value.toFixed(2) : '—'} pN` : null)} />} />
                 <Area dataKey="iqr" stroke="none" fill={chart.accent} fillOpacity={0.12} isAnimationActive={false} />
                 <Line type="linear" dataKey="mean" stroke={chart.accent} strokeWidth={1.4} dot={false} isAnimationActive={false} />
               </ComposedChart>
@@ -121,11 +121,14 @@ export function AveragePanel({ version, defaultWindow, paperRate, onRate }: { ve
           <Eq tag="paper, Eq. (2) · verified" tex="\langle f(t)\rangle \approx \dot f\, t \equiv f(t)" />
           <p>
             The paper computes <M tex="\dot f" /> as the gradient of the averaged trace "in a small time interval near t = 0". How small is not stated, so the
-            window is a <span className="tag tag--prototype" style={{ marginLeft: 0 }}>prototype assumption</span>; the table shows how much the answer moves with it.
+            window length is a choice of this implementation, not the paper's; the table shows how much the answer moves with it.
+          </p>
+          <p>
+            <span className="tag tag--prototype" style={{ marginLeft: 0 }}>prototype assumption</span>
           </p>
         </div>
         <div>
-          <div className="figure__title">sensitivity of ḟ to the window</div>
+          <div className="figure__title">sensitivity of the force rate to the window</div>
           <table className="facts">
             <tbody>
               {avg.data?.sensitivity.map((s) => (

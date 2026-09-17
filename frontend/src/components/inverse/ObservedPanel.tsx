@@ -25,14 +25,14 @@ export function ObservedPanel({ version, defaults, onSample }: { version: number
   const lead = <>One critical force per trace. A histogram and a kernel estimate are drawn together so the shape is not one estimator's artefact.</>
   if (smp.missing) {
     return (
-      <Panel index="B" title="What was observed" lead={lead}>
+      <Panel index="2.2" title="What was observed" lead={lead}>
         <Empty>Run the Version 1 pipeline first.</Empty>
       </Panel>
     )
   }
 
   return (
-    <Panel index="B" title="What was observed" lead={lead}>
+    <Panel index="2.2" title="What was observed" lead={lead}>
       <div className="controls">
         <div className="control">
           <span className="control__label">
@@ -42,13 +42,13 @@ export function ObservedPanel({ version, defaults, onSample }: { version: number
             value={source}
             onChange={setSource}
             options={[
-              { value: 'rate_x_time', label: 'ḟ · t‡ (paper)' },
+              { value: 'rate_x_time', label: <><M tex="\dot f\,t^\ddagger" /> (paper)</> },
               { value: 'smoothed_peak', label: 'smoothed peak' },
             ]}
           />
         </div>
         <Slider label="peak-picker smoothing" value={smoothing} min={1} max={61} step={2} onChange={setSmoothing} format={(v) => `${v} pts`} />
-        <Slider label="ḟ fit window" value={window} min={25} max={200} step={5} onChange={setWindow} format={(v) => `${v} ps`} />
+        <Slider label={<>fit window for <M tex="\dot f" /></>} value={window} min={25} max={200} step={5} onChange={setWindow} format={(v) => `${v} ps`} />
       </div>
 
       <div className="grid-2">
@@ -89,7 +89,7 @@ export function ObservedPanel({ version, defaults, onSample }: { version: number
           <Readout label="mean" value={`${fixed(s.mean_pN, 2)} ± ${fixed(s.sem_pN, 2)}`} unit="pN" tone="accent" />
           <Readout label="s.d." value={fixed(s.sd_pN, 2)} unit="pN" />
           <Readout label="skewness" value={fixed(s.skewness, 2)} />
-          <Readout label="ḟ" value={fixed(s.force_rate_pN_per_ps, 4)} unit="pN/ps" />
+          <Readout label={<M tex="\dot f" />} value={fixed(s.force_rate_pN_per_ps, 4)} unit="pN/ps" />
         </div>
       )}
     </Panel>
