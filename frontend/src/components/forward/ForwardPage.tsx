@@ -154,7 +154,7 @@ function ModelPanel({ res }: { res: FwdResult | null }) {
                 <tr>
                   <td>Time scales</td>
                   <td className="num">
-                    well relaxation {fixed(p.tau_well_ps, 3)} ps · diffusion over <M tex="\xi^\ddagger" /> {fixed(p.tau_diffusion_ps, 1)} ps · ramp to <M tex="f_c" /> {fixed(res?.t_end_ps, 0)} ps
+                    well relaxation {fixed(p.tau_well_ps, 3)} ps · diffusion over <M tex="\xi^\ddagger" /> {fixed(p.tau_diffusion_ps, 1)} ps · ramp to <M tex="f_c" /> {fixed(res?.t_fc_ps, 0)} ps, run to {fixed(res?.t_end_ps, 0)} ps
                   </td>
                 </tr>
                 <tr>
@@ -428,14 +428,15 @@ function DensityPanel({ res, obs }: { res: FwdResult | null; obs: FwdObservables
             </ResponsiveContainer>
           </div>
         </Figure>
-        <Figure title={<>survival <M tex="\Psi(t)" /> against the applied force</>} note={<>Reaches {sci(res.observables.residual_mass, 1)} at <M tex="f_c" />: the residual mass that would transition deterministically when the barrier vanishes.</>}>
+        <Figure title={<>survival <M tex="\Psi(t)" /> against the applied force</>} note={<>Dashed: <M tex="f_c" />, where the barrier vanishes. A fraction {sci(res.observables.mass_after_fc, 1)} is absorbed after it — transit through the vanished barrier — and {sci(res.observables.residual_mass, 1)} is still in the domain when the run ends.</>}>
           <div className="chart chart--tall">
             <ResponsiveContainer>
               <ComposedChart data={surv} margin={chart.margin}>
                 <Grid />
-                <XNum dataKey="f" label="applied force f [pN]" range={[0, Math.ceil(res.parameters.f_c_pN / 5) * 5]} />
+                <XNum dataKey="f" label="applied force f [pN]" range={[0, Math.ceil((res.t_end_ps * res.force_rate_pN_per_ps) / 5) * 5]} />
                 <YNum label="Ψ" range={[0, 1]} />
                 <Tooltip content={<Tip unitX="pN" fmtX={(v) => v.toFixed(1)} rows={(p) => `Ψ = ${typeof p.value === 'number' ? p.value.toFixed(3) : ''}`} />} />
+                <ReferenceLine x={res.parameters.f_c_pN} stroke={chart.ink3} strokeDasharray="4 3" />
                 <Line dataKey="s" type="monotone" stroke={chart.model} strokeWidth={1.6} dot={false} isAnimationActive={false} />
               </ComposedChart>
             </ResponsiveContainer>
@@ -461,7 +462,7 @@ function ObservablePanel({ res, obs }: { res: FwdResult | null; obs: FwdObservab
     )
   }
   const o = res.observables
-  const xr: [number, number] = [0, Math.ceil(res.parameters.f_c_pN / 5) * 5]
+  const xr: [number, number] = [0, Math.ceil((res.t_end_ps * res.force_rate_pN_per_ps) / 5) * 5]
   return (
     <Panel index="3.4" title="The predicted observable" lead={lead}>
       <div className="grid-2">
@@ -506,8 +507,13 @@ function ObservablePanel({ res, obs }: { res: FwdResult | null; obs: FwdObservab
         {hasData && <Readout label={<>sample <MeanF />, s.d.</>} value={`${fixed(dc.sample_mean_pN, 2)}, ${fixed(dc.sample_sd_pN, 2)}`} unit={`pN · n = ${dc.n}`} tone="accent" />}
         {hasData && <Readout label="ln L of sample · PDE / Eq. 6" value={`${fixed(dc.log_likelihood_pde, 1)} / ${fixed(dc.log_likelihood_eq6, 1)}`} />}
         {hasData && <Readout label="KS D, sample vs PDE" value={fixed(dc.ks_D_vs_pde, 3)} />}
-        <Readout label={<M tex="\psi(f_c)" />} value={sci(o.residual_mass, 1)} />
+        <Readout label={<>absorbed after <M tex="f_c" /></>} value={sci(o.mass_after_fc, 1)} tone="model" />
+        <Readout label={<>Eq. 6 mass at <M tex="f_c" /></>} value={sci(o.eq6.residual_mass, 1)} />
       </div>
+      <p className="figure__note" style={{ marginTop: 10 }}>
+        Eq. (6) places whatever has not escaped by <M tex="f_c" /> as a point mass there; the PDE lets it cross a little later, so its density has support beyond{' '}
+        <M tex="f_c" />. Both are shown; at this rate the difference is negligible.
+      </p>
       {hasData && (
         <p className="figure__note" style={{ marginTop: 10 }}>
           {dc.ks_note}. {res.parameter_provenance.source.startsWith('inverse') ? 'Agreement with the sample is expected here: these parameters were fitted to it (Version 2) — this run tests the Kramers approximation, not the physics.' : 'These parameters were not fitted to this sample; with n = 100 the 5 % critical value of D is 0.136.'}
@@ -534,7 +540,7 @@ function SpectrumPanel({ res, spec }: { res: FwdResult | null; spec: FwdSpec | n
   }
   return (
     <Panel index="3.5" title="The force spectrum" lead={lead}>
-      <Figure title={<><M tex="\langle f^\ddagger\rangle(\dot f)" /> · PDE (slate points), Eq. 8 (line), Eq. 6 exact (dotted)</>} note="Grey: the paper's Fig. 3 symbols read by eye, ± 1 pN. Terracotta: this dataset. The PDE sits above the closed forms by an amount that grows with rate — the transit past the barrier that the steady-flux approximation neglects.">
+      <Figure title={<><M tex="\langle f^\ddagger\rangle(\dot f)" /> · PDE (slate points), Eq. 8 (line), Eq. 6 exact (dotted)</>} note={<>Grey: the paper's Fig. 3 symbols read by eye, ± 1 pN. Terracotta: this dataset. The PDE sits above the closed forms by an amount that grows with rate — the transit past the barrier that the steady-flux approximation neglects. The last column is the fraction absorbed after the barrier has vanished; Eq. (6) puts that mass exactly at <M tex="f_c" />.</>}>
         <div className="chart chart--tall">
           <ResponsiveContainer>
             <ComposedChart data={data} margin={chart.margin}>
@@ -556,7 +562,7 @@ function SpectrumPanel({ res, spec }: { res: FwdResult | null; spec: FwdSpec | n
         </div>
       </Figure>
       <Table
-        head={['rate', <><Fdot /> [pN/ps]</>, <>PDE <MeanF /></>, 'PDE s.d.', 'Eq. 6', 'Eq. 8', 'PDE − Eq. 6', <M tex="\psi(f_c)" />]}
+        head={['rate', <><Fdot /> [pN/ps]</>, <>PDE <MeanF /></>, 'PDE s.d.', 'Eq. 6', 'Eq. 8', 'PDE − Eq. 6', <>after <M tex="f_c" /></>]}
         rows={rows.map((r) => [
           r.index,
           <span className="num">{sci(r.force_rate, 3)}</span>,
@@ -565,7 +571,7 @@ function SpectrumPanel({ res, spec }: { res: FwdResult | null; spec: FwdSpec | n
           <span className="num">{fixed(r.mean_eq6_exact_pN, 2)}</span>,
           <span className="num">{fixed(r.mean_eq8_pN, 2)}</span>,
           <span className="num">{fixed(r.mean_pde_pN - r.mean_eq6_exact_pN, 2)}</span>,
-          <span className="num">{sci(r.residual_mass_pde, 1)}</span>,
+          <span className="num">{sci(r.mass_after_fc_pde, 1)}</span>,
         ])}
       />
     </Panel>

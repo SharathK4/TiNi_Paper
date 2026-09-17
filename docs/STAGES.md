@@ -201,3 +201,28 @@ CPU only.
 * The "prototype assumption" tag no longer sits mid-sentence.
 * Section 1.6 records now point to Versions 2 and 3 instead of "not in v1".
 * Sections numbered as chapters: 1.1–1.6, 2.1–2.7, 3.1–3.7.
+
+## Final validation (2026-09-17)
+* Independent re-derivations: Eq. (5) against direct quadrature of
+  Eq. (3)+(4) (10⁻¹²); Eq. (4) shown to be exactly Kramers' rate for the
+  tilted cubic (ratio 1.0000); the E₁ identity behind Eq. (8) checked by
+  quadrature (11.4543 both ways).
+* Independent method: overdamped Langevin simulation (40 000 particles)
+  reproduces the PDE's mean to 0.006 pN (MC error 0.014) and its CDF to
+  KS = 0.004; Eq. (6) differs by 0.2 pN / KS 0.035. Added as validation I
+  and as a test (3 000 particles, 2 s).
+* Stress: backward Euler positive and conservative at Δt = 1.7 ps;
+  Crank–Nicolson goes negative — the default is confirmed.
+* **Bug found and fixed**: runs stopped exactly at f_c and reported the
+  density still in transit as "residual mass ψ(f_c)". At the fastest paper
+  rate that was 7 % (50 % for Table 1 col. 2); continuing the ramp shows all
+  of it is absorbed just past f_c. Runs now go to 1.3 f_c; the quantity is
+  reported as "absorbed after f_c", distinct from "never absorbed" (≈ 0).
+  All stored forward runs regenerated; docs and UI updated. At the measured
+  rate nothing changes (10⁻¹³).
+* Routes: all three pages scanned for NaN/undefined/Infinity/error
+  boundaries — none; 5 forward runs open without error.
+* Documentation numbers re-extracted from the stored runs and compared line
+  by line with INVERSE_PROBLEM.md §10 and FORWARD_MODEL.md §7–8; three V3
+  entries updated for the longer run.
+* 88 tests, `tsc -b`, `vite build` clean.

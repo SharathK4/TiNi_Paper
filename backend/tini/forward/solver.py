@@ -77,7 +77,7 @@ class SolverSettings:
     boundary: str = "beyond_barrier"
     margin_kBT: float = 4.0             # beyond_barrier: U₀ at ξ_A is this far below the barrier top
     xi_left_factor: float = 0.6         # ξ_L = −xi_left_factor · ξ‡
-    t_end_factor: float = 1.0           # t_end = t_end_factor · f_c/ḟ
+    t_end_factor: float = 1.3           # t_end = t_end_factor · f_c/ḟ: the ramp continues past f_c so transit through the vanished barrier completes
     n_snapshots: int = 80
     xi_A_override: float | None = None  # validation only: place the absorbing boundary here
 
@@ -306,7 +306,12 @@ def solve(
 
 # ------------------------------------------------------------------ observables
 def force_density(sol: ForwardSolution) -> dict[str, Any]:
-    """p(f | ḟ) = ρ(t)/ḟ at f = ḟ t, its moments (with the residual mass at f_c), CDF."""
+    """p(f | ḟ) = ρ(t)/ḟ at f = ḟ t on the whole run, its moments and CDF.
+
+    The PDE lets density be absorbed after the barrier has vanished (f > f_c):
+    that transit mass is reported as ``mass_after_fc``. Whatever is still in
+    the domain at the end of the run (``residual_mass``, ≈ 0 with the default
+    t_end = 1.3 f_c/ḟ) is placed at the final force for the moments."""
     if sol.force_rate <= 0:
         raise ValueError("force density needs a ramped run")
     f = sol.force
@@ -314,11 +319,13 @@ def force_density(sol: ForwardSolution) -> dict[str, Any]:
     cdf = sol.absorbed.copy()
     rm = sol.residual_mass
     fc = sol.params.f_c
+    f_end = float(f[-1])
     Z = float(np.trapezoid(p, f)) + rm
-    mean = float(np.trapezoid(f * p, f)) + fc * rm
-    var = float(np.trapezoid((f - mean) ** 2 * p, f)) + (fc - mean) ** 2 * rm
+    mean = float(np.trapezoid(f * p, f)) + f_end * rm
+    var = float(np.trapezoid((f - mean) ** 2 * p, f)) + (f_end - mean) ** 2 * rm
+    after = float(sol.absorbed[-1] - np.interp(fc, f, sol.absorbed)) if f_end > fc else 0.0
     return {
-        "f_pN": f, "pdf": p, "cdf": cdf, "residual_mass": rm, "norm": Z,
+        "f_pN": f, "pdf": p, "cdf": cdf, "residual_mass": rm, "mass_after_fc": after, "norm": Z,
         "mean_pN": mean, "sd_pN": float(np.sqrt(max(var, 0.0))), "mode_pN": float(f[int(np.argmax(p))]),
     }
 

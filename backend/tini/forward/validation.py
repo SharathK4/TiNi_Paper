@@ -154,7 +154,7 @@ def physics_checks(params: ForwardParams, force_rate: float, sol, rates: tuple[f
     for r in rates:
         s = solve(params, r, st)
         d = force_density(s)
-        means.append({"force_rate": r, "mean_pde_pN": d["mean_pN"], "sd_pde_pN": d["sd_pN"], "mean_eq8_pN": lk.mean_eq8(r), "mean_eq6_exact_pN": lk.moments_exact(r, n=4001)["mean"], "residual_mass": d["residual_mass"]})
+        means.append({"force_rate": r, "mean_pde_pN": d["mean_pN"], "sd_pde_pN": d["sd_pN"], "mean_eq8_pN": lk.mean_eq8(r), "mean_eq6_exact_pN": lk.moments_exact(r, n=4001)["mean"], "residual_mass": d["residual_mass"], "mass_after_fc": d["mass_after_fc"]})
     return {
         "pdf_nonnegative": bool(np.all(fd["pdf"] >= 0)),
         "norm_plus_residual": fd["norm"],
@@ -163,4 +163,46 @@ def physics_checks(params: ForwardParams, force_rate: float, sol, rates: tuple[f
         "l1_pde_vs_eq6": l1, "max_cdf_diff_pde_vs_eq6": dmax,
         "mean_increases_with_rate": bool(all(np.diff([m["mean_pde_pN"] for m in means]) > 0)),
         "spectrum": means,
+    }
+
+
+# ------------------------------------------------------------------ I (independent method)
+def langevin_check(params: ForwardParams, force_rate: float, settings: SolverSettings | None = None, n_particles: int = 4000, dt: float = 0.01, seed: int = 12345) -> dict[str, Any]:
+    """Overdamped Langevin (Euler–Maruyama) simulation of the same dynamics —
+    same η, D, U(ξ,t), ramp, boundaries and initial density — sharing no code
+    with the finite-volume solver. Compares the first-passage force sample
+    with the PDE's p(f | ḟ). Statistical error of the MC mean ≈ s.d./√N."""
+    from ..potential import Landscape
+
+    st = settings or SolverSettings(n_cells=200, n_steps=8000)
+    sol = solve(params, force_rate, st)
+    fd = force_density(sol)
+    g = sol.grid
+    land = Landscape(params.U_barrier, params.xi_barrier)
+    rng = np.random.default_rng(seed)
+    p0 = sol.snapshots[0] / sol.snapshots[0].sum()
+    x = rng.choice(g.centers, size=n_particles, p=p0) + (rng.random(n_particles) - 0.5) * g.h
+    alive = np.ones(n_particles, bool)
+    f_hit = np.full(n_particles, np.nan)
+    t = 0.0
+    T = float(sol.t[-1])
+    sq = np.sqrt(2 * params.D * dt)
+    while t < T and alive.any():
+        idx = np.flatnonzero(alive)
+        xa = x[idx]
+        xa = xa + ((land.force(xa) + force_rate * t) / params.eta) * dt + sq * rng.standard_normal(xa.size)
+        xa = np.where(xa < g.xi_L, 2 * g.xi_L - xa, xa)
+        t += dt
+        hit = xa >= g.xi_A
+        f_hit[idx[hit]] = force_rate * t
+        x[idx] = xa
+        alive[idx[hit]] = False
+    fm = f_hit[np.isfinite(f_hit)]
+    xs = np.sort(fm)
+    emp = np.arange(1, xs.size + 1) / xs.size
+    ks = float(np.max(np.abs(emp - np.interp(xs, fd["f_pN"], fd["cdf"])))) if xs.size else float("nan")
+    return {
+        "n_particles": n_particles, "dt_ps": dt, "seed": seed, "absorbed_fraction": float(np.mean(~alive)),
+        "mc_mean_pN": float(fm.mean()), "mc_sd_pN": float(fm.std(ddof=1)), "mc_sem_pN": float(fm.std(ddof=1) / np.sqrt(fm.size)),
+        "pde_mean_pN": fd["mean_pN"], "pde_sd_pN": fd["sd_pN"], "ks_mc_vs_pde": ks, "ks_noise_5pct": float(1.36 / np.sqrt(max(fm.size, 1))),
     }

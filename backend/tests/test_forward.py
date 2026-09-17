@@ -125,6 +125,16 @@ def test_force_density_is_a_density_and_agrees_with_eq6(ramp):
     assert l1 < 0.12
 
 
+def test_transit_past_fc_is_resolved_not_truncated():
+    """At the fastest paper rate a few percent of the density is absorbed after the
+    barrier has vanished; with the default run length nothing is left unabsorbed."""
+    fast = force_density(solve(P, 0.9242, SolverSettings(n_cells=150, n_steps=4000)))
+    assert fast["residual_mass"] < 1e-4
+    assert 0.01 < fast["mass_after_fc"] < 0.2
+    slow = force_density(solve(P, FDOT, SolverSettings(n_cells=150, n_steps=4000)))
+    assert slow["mass_after_fc"] < 1e-6 and slow["residual_mass"] < 1e-6
+
+
 def test_mean_increases_with_rate():
     means = [force_density(solve(P, r, SolverSettings(n_cells=120, n_steps=2500)))["mean_pN"] for r in (3.2e-3, 9.4e-2, 9.2e-1)]
     assert means[0] < means[1] < means[2] < P.f_c
@@ -140,3 +150,13 @@ def test_rejects_bad_settings():
         SolverSettings(boundary="elsewhere")
     with pytest.raises(ValueError):
         ForwardParams(1.0, 1.0, 0.0)
+
+
+# ------------------------------------------------------------- I
+def test_langevin_simulation_agrees_with_pde():
+    """An independent stochastic simulation of the same dynamics reproduces the
+    PDE's critical-force distribution within its statistical error."""
+    m = V.langevin_check(P, FDOT, SolverSettings(n_cells=150, n_steps=4000), n_particles=3000, dt=0.01)
+    assert m["absorbed_fraction"] > 0.999
+    assert abs(m["mc_mean_pN"] - m["pde_mean_pN"]) < 3 * m["mc_sem_pN"] + 0.05   # + Euler–Maruyama bias allowance
+    assert m["ks_mc_vs_pde"] < 1.5 * m["ks_noise_5pct"]

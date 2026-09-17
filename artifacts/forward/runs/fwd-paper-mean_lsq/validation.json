@@ -1,9 +1,9 @@
 {
   "A_B_conservation_positivity": {
-    "conservation_error_max": 2.375877272697835e-14,
+    "conservation_error_max": 4.196643033083092e-14,
     "min_density": 0.0,
-    "final_survival": 0.00018297817572722377,
-    "final_absorbed": 0.9998170218242941
+    "final_survival": 1.0595696269616397e-25,
+    "final_absorbed": 1.0000000000000329
   },
   "C1_reflecting_equilibrium": {
     "l1_drift": 1.3798766851968496e-12,

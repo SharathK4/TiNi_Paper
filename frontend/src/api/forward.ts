@@ -49,12 +49,14 @@ export type FwdResult = {
   grid: { xi_L_A: number; xi_A_A: number; n_cells: number; h_A: number }
   boundary: { boundary: string; xi_A_A: number; U0_at_xi_A_pN_A: number; xi_L_A: number; U0_at_xi_L_kBT: number; margin_kBT?: number }
   t_end_ps: number
+  t_fc_ps: number
   dt_ps: number
   observables: {
     mean_pN: number
     sd_pN: number
     mode_pN: number
     residual_mass: number
+    mass_after_fc: number
     norm: number
     eq6: { mean_pN: number; sd_pN: number; residual_mass: number; mean_eq8_pN: number }
     l1_pde_vs_eq6: number
@@ -74,7 +76,7 @@ export type FwdResult = {
       }
     | { skipped: true }
   convergence: { grid_order: number | null; time_order: number | null; richardson_grid_pN: number | null; richardson_time_pN: number | null; grid_levels: Level[]; time_levels: Level[] } | { skipped: true }
-  spectrum: { index: string; force_rate: number; mean_pde_pN: number; sd_pde_pN: number; residual_mass_pde: number; mean_eq8_pN: number; mean_eq6_exact_pN: number; sd_eq6_pN: number }[] | { skipped: true }
+  spectrum: { index: string; force_rate: number; mean_pde_pN: number; sd_pde_pN: number; residual_mass_pde: number; mass_after_fc_pde: number; mean_eq8_pN: number; mean_eq6_exact_pN: number; sd_eq6_pN: number }[] | { skipped: true }
   solver_duration_s: number | null
   phase_files: Record<string, string>
 }

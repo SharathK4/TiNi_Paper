@@ -13,6 +13,7 @@
     "margin_kBT": 4.0,
     "xi_left_factor": 0.6,
     "n_snapshots": 80,
+    "t_end_factor": 1.3,
     "validation_enabled": true,
     "convergence_enabled": true,
     "spectrum_enabled": true,
@@ -20,7 +21,7 @@
     "model_version": "smoluchowski-fv-sg-be-1"
   },
   "model_version": "smoluchowski-fv-sg-be-1",
-  "code_hash": "3318de5834b6",
+  "code_hash": "054cd11009bf",
   "parameters": {
     "U_barrier_pN_A": 659.0,
     "xi_barrier_A": 36.1,
@@ -58,8 +59,9 @@
     "xi_L_A": -21.66,
     "U0_at_xi_L_kBT": 24.05651255315435
   },
-  "t_end_ps": 290.24726144513994,
-  "dt_ps": 0.014512363072256998,
-  "created_at": 1789666348.6129804,
-  "created_at_iso": "2026-09-17T23:02:28"
+  "t_end_ps": 377.32143987868193,
+  "t_fc_ps": 290.24726144513994,
+  "dt_ps": 0.018866071993934096,
+  "created_at": 1789668392.5656407,
+  "created_at_iso": "2026-09-17T23:36:32"
 }

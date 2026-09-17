@@ -1,46 +1,35 @@
 {
   "runs": [
     {
-      "run_id": "fwd-inverse-top",
-      "completed_at": 1789666708.5409236,
-      "completed_at_iso": "2026-09-17T23:08:28",
+      "run_id": "fwd-inverse-latest",
+      "completed_at": 1789668378.091585,
+      "completed_at_iso": "2026-09-17T23:36:18",
       "parameter_source": "inverse:latest",
-      "boundary": "barrier_top",
+      "boundary": "beyond_barrier",
       "force_rate": 0.09434118803329211,
-      "mean_pN": 18.458303228799764,
+      "mean_pN": 18.75803421066484,
       "n_cells": 250,
       "n_steps": 20000
     },
     {
       "run_id": "fwd-paper-pdf_mle",
-      "completed_at": 1789666708.654748,
-      "completed_at_iso": "2026-09-17T23:08:28",
+      "completed_at": 1789668390.9393198,
+      "completed_at_iso": "2026-09-17T23:36:30",
       "parameter_source": "paper:pdf_mle",
       "boundary": "beyond_barrier",
       "force_rate": 0.09434118803329211,
-      "mean_pN": 19.885025795169074,
-      "n_cells": 250,
-      "n_steps": 20000
-    },
-    {
-      "run_id": "fwd-trial-01",
-      "completed_at": 1789666708.7392375,
-      "completed_at_iso": "2026-09-17T23:08:28",
-      "parameter_source": "inverse:latest",
-      "boundary": "beyond_barrier",
-      "force_rate": 0.09434118803329211,
-      "mean_pN": 18.757907441028042,
+      "mean_pN": 19.885156152976407,
       "n_cells": 250,
       "n_steps": 20000
     },
     {
       "run_id": "fwd-paper-mean_lsq",
-      "completed_at": 1789666726.7995496,
-      "completed_at_iso": "2026-09-17T23:08:46",
+      "completed_at": 1789668403.8052027,
+      "completed_at_iso": "2026-09-17T23:36:43",
       "parameter_source": "paper:mean_lsq",
       "boundary": "beyond_barrier",
       "force_rate": 0.09434118803329211,
-      "mean_pN": 20.184988310521554,
+      "mean_pN": 20.185177964175537,
       "n_cells": 250,
       "n_steps": 20000
     }

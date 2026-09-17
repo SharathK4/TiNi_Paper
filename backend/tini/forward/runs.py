@@ -60,6 +60,7 @@ class ForwardConfig:
     margin_kBT: float = 4.0
     xi_left_factor: float = 0.6
     n_snapshots: int = 80
+    t_end_factor: float = 1.3                  # ramp continues to 1.3 f_c so transit past the vanished barrier completes
     # extras
     validation_enabled: bool = True
     convergence_enabled: bool = True
@@ -71,7 +72,7 @@ class ForwardConfig:
         return asdict(self)
 
     def settings(self) -> SolverSettings:
-        return SolverSettings(n_cells=self.n_cells, n_steps=self.n_steps, theta=self.theta, boundary=self.boundary, margin_kBT=self.margin_kBT, xi_left_factor=self.xi_left_factor, n_snapshots=self.n_snapshots)
+        return SolverSettings(n_cells=self.n_cells, n_steps=self.n_steps, theta=self.theta, boundary=self.boundary, margin_kBT=self.margin_kBT, xi_left_factor=self.xi_left_factor, n_snapshots=self.n_snapshots, t_end_factor=self.t_end_factor)
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> "ForwardConfig":
@@ -258,7 +259,7 @@ class ForwardRun:
         self._save("prepare", {
             "run_id": self.run_id, "config": self.config.to_dict(), "model_version": self.config.model_version, "code_hash": code_hash(),
             "parameters": params.to_dict(), "parameter_provenance": prov, "force_rate_pN_per_ps": fdot, "force_rate_provenance": fprov,
-            "grid": grid.to_dict(), "boundary": binfo, "t_end_ps": params.f_c / fdot, "dt_ps": params.f_c / fdot / st.n_steps,
+            "grid": grid.to_dict(), "boundary": binfo, "t_end_ps": st.t_end_factor * params.f_c / fdot, "t_fc_ps": params.f_c / fdot, "dt_ps": st.t_end_factor * params.f_c / fdot / st.n_steps,
             "created_at": time.time(), "created_at_iso": time.strftime("%Y-%m-%dT%H:%M:%S"),
         })
 
@@ -314,7 +315,7 @@ class ForwardRun:
             "force_rate_pN_per_ps": fdot, "t_end_ps": float(sol.t[-1]),
             "f_pN": _display(f), "pdf": _display(fd["pdf"]), "cdf": _display(fd["cdf"]), "survival_t": _display(sol.survival), "t_ps": _display(sol.t), "flux": _display(sol.flux),
             "pdf_eq6": _display(p6), "cdf_eq6": _display(cdf6),
-            "mean_pN": fd["mean_pN"], "sd_pN": fd["sd_pN"], "mode_pN": fd["mode_pN"], "residual_mass": fd["residual_mass"], "norm": fd["norm"],
+            "mean_pN": fd["mean_pN"], "sd_pN": fd["sd_pN"], "mode_pN": fd["mode_pN"], "residual_mass": fd["residual_mass"], "mass_after_fc": fd["mass_after_fc"], "norm": fd["norm"],
             "eq6": {"mean_pN": m6["mean"], "sd_pN": m6["sd"], "residual_mass": m6["residual_mass"], "mean_eq8_pN": lk.mean_eq8(fdot)},
             "l1_pde_vs_eq6": float(np.trapezoid(np.abs(fd["pdf"] - p6), f)),
             "max_cdf_diff_pde_vs_eq6": float(np.max(np.abs(fd["cdf"] - cdf6))),
@@ -405,7 +406,7 @@ class ForwardRun:
             self._check()
             s = solve(p, r, st, cancel=self._cancelled)
             d = force_density(s)
-            rows.append({"index": meta["index"], "force_rate": r, "mean_pde_pN": d["mean_pN"], "sd_pde_pN": d["sd_pN"], "residual_mass_pde": d["residual_mass"],
+            rows.append({"index": meta["index"], "force_rate": r, "mean_pde_pN": d["mean_pN"], "sd_pde_pN": d["sd_pN"], "residual_mass_pde": d["residual_mass"], "mass_after_fc_pde": d["mass_after_fc"],
                          "mean_eq8_pN": lk.mean_eq8(r), "mean_eq6_exact_pN": lk.moments_exact(r, n=4001)["mean"], "sd_eq6_pN": lk.moments_exact(r, n=4001)["sd"]})
             self.progress.file_done(i + 1)
         self._save("spectrum", {"rows": rows, "fig3_readings_by_eye": FIG3_READINGS_BY_EYE, "solver": st.to_dict()})
@@ -422,8 +423,8 @@ class ForwardRun:
             "created_at_iso": cfg.get("created_at_iso"), "completed_at_iso": time.strftime("%Y-%m-%dT%H:%M:%S"),
             "config": self.config.to_dict(), "parameters": cfg.get("parameters"), "parameter_provenance": cfg.get("parameter_provenance"),
             "force_rate_pN_per_ps": cfg.get("force_rate_pN_per_ps"), "force_rate_provenance": cfg.get("force_rate_provenance"),
-            "grid": cfg.get("grid"), "boundary": cfg.get("boundary"), "t_end_ps": cfg.get("t_end_ps"), "dt_ps": cfg.get("dt_ps"),
-            "observables": {k: obs.get(k) for k in ("mean_pN", "sd_pN", "mode_pN", "residual_mass", "norm", "eq6", "l1_pde_vs_eq6", "max_cdf_diff_pde_vs_eq6", "data_comparison")},
+            "grid": cfg.get("grid"), "boundary": cfg.get("boundary"), "t_end_ps": cfg.get("t_end_ps"), "t_fc_ps": cfg.get("t_fc_ps"), "dt_ps": cfg.get("dt_ps"),
+            "observables": {k: obs.get(k) for k in ("mean_pN", "sd_pN", "mode_pN", "residual_mass", "mass_after_fc", "norm", "eq6", "l1_pde_vs_eq6", "max_cdf_diff_pde_vs_eq6", "data_comparison")},
             "validation": {k: v for k, v in val.items()} if val and not val.get("skipped") else val,
             "convergence": {"grid_order": (conv.get("grid") or {}).get("observed_order_mean"), "time_order": (conv.get("time") or {}).get("observed_order_mean"),
                             "richardson_grid_pN": (conv.get("grid") or {}).get("richardson_error_estimate_pN"), "richardson_time_pN": (conv.get("time") or {}).get("richardson_error_estimate_pN"),

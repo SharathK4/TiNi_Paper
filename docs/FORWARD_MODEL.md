@@ -126,8 +126,13 @@ analytic p(f | ḟ) (Eq. 6) is the *Kramers/steady-flux approximation* to the
 PDE's p(f | ḟ); the forward model computes the latter without that
 approximation.
 
-The run stops at t_end = f_c/ḟ (barrier vanished). Mass still in the domain
-at t_end is reported as ψ(f_c), exactly as V2 does for Eq. (6).
+The run continues to t_end = 1.3 f_c/ḟ, past the point where the barrier
+vanishes. Density that crosses after f_c — transit through the vanished
+barrier, which takes a finite time — is absorbed at f > f_c and reported as
+``mass_after_fc``; Eq. (6) places the same mass as a point at f_c. Mass still
+in the domain at t_end (``residual_mass``) is ≈ 0 for every case examined.
+(An earlier version stopped at f_c and reported the transit mass as
+"residual"; at the fastest paper rate that was 7 % — see §7.)
 
 ## 5. Numerical scheme — and why
 
@@ -191,17 +196,20 @@ for it is C2 (exact at fixed force), D–E (convergence) and F–H (limits).
 
 | test | result | metric |
 | --- | --- | --- |
-| A conservation | Ψ + absorbed = 1 at every step | max deviation 8×10⁻¹⁴ (250 cells × 20 000 steps) |
+| A conservation | Ψ + absorbed = 1 at every step | max deviation 2×10⁻¹³ (250 cells × 20 000 steps) |
 | B positivity | no negative cell, no clipping | min P̄ = 7×10⁻³⁸ /Å |
 | C1 equilibrium | Boltzmann density stationary, both walls reflecting, 50 ps | L1 drift 6×10⁻¹⁵ |
 | C2 exact MFPT | fixed f = 0.6 f_c (3.9 k_BT barrier), from the well-confined Boltzmann start | 43.63 vs 43.59 ps exact, 0.10 %; also 0.09 % at the ξ‡ placement, 0.10 % at 0.5 f_c (5.5 k_BT), 0.12 % at 0.7 f_c (2.5 k_BT) |
 | C3 diffusion | U ≡ 0, variance = 2Dt | relative error 1.4×10⁻⁸ |
 | D grid | h → h/2 → h/4 → h/8, ⟨f‡⟩ change 0.0028, 0.0007, 0.0002 pN | observed order 2.00 |
-| E time | Δt → Δt/2 → Δt/4 → Δt/8, ⟨f‡⟩ change −0.0017, −0.0009, −0.0004 pN | observed order 1.00; Richardson error at 20 000 steps 4×10⁻⁴ pN |
+| E time | Δt → Δt/2 → Δt/4 → Δt/8, ⟨f‡⟩ change −0.0017, −0.0009, −0.0004 pN | observed order 1.00; Richardson error at 20 000 steps ≤ 6×10⁻⁴ pN |
 | F Kramers, f = 0.3 f_c (9.0 k_BT) | Γ_PDE/Γ_Eq.4 | absorbing beyond: **0.965**; at ξ‡: 1.21; on the transition state: **1.79** (recrossing, → 2) |
 | F Kramers, f = 0.6 f_c (3.9 k_BT) | Γ_PDE/Γ_Eq.4 | beyond 0.92; at ξ‡ 0.97; on the TS 1.65 |
 | G reproducibility | two runs | bitwise identical |
-| H physics | p ≥ 0; ∫p + ψ(f_c) = 1.000012; ⟨f‡⟩ increases with ḟ | true |
+| H physics | p ≥ 0; ∫p df + residual = 1 − 10⁻¹³; ⟨f‡⟩ increases with ḟ | true |
+| **I Langevin** | overdamped Euler–Maruyama, 40 000 particles, Δt = 0.004 ps, same η, D, ramp, boundaries, initial density; no shared code | MC ⟨f‡⟩ 19.890 ± 0.014 vs PDE 19.884 (Eq. 6: 19.689); KS(MC, PDE) = 0.004 below the 0.007 noise level; KS(MC, Eq. 6) = 0.035 |
+| stress | backward Euler at Δt = 1.7 ps (20× the well relaxation time) | still positive, conservative, ⟨f‡⟩ moves 0.04 pN; Crank–Nicolson at Δt = 0.7 ps gives min P = −5×10⁻⁸ |
+| identities | Eq. (5) closed form vs direct quadrature of Eq. (3)+(4); Eq. (4) vs Kramers with the tilted cubic's actual barrier and curvatures | 10⁻¹²; ratio 1.0000 at f/f_c = 0.2, 0.4, 0.6 (Eq. 4 *is* Kramers for this landscape) |
 
 Reading of F: the paper's rate law Eq. (4) is what the PDE gives when the
 density is absorbed *beyond* the barrier; absorbing on the transition state
@@ -226,8 +234,12 @@ exact formula now use the well-confined density.
 | Table 1 col. 2 | beyond | 20.18, 2.69 | 19.92, 2.72 | 0.104 | 0.050 | −267.9 / −263.1 | 0.241 (valid) |
 
 Force spectrum (V2 MLE, beyond): PDE − Eq. 6 exact mean = +0.09, +0.11,
-+0.13, +0.17, +0.24, +0.35, +0.41 pN at rates (i)–(vii); residual mass
-ψ(f_c) rises from 10⁻³⁰⁶ to 7 % at rate (vii).
++0.13, +0.17, +0.24, +0.35, +0.51 pN at rates (i)–(vii). The fraction
+absorbed *after* f_c is < 10⁻¹² up to rate (v), 10⁻⁴ at (vi) and 7 % at
+(vii); for Table 1 column 2 (lowest f_c = 27.4 pN) it is 50 % at (vii) and
+the PDE mean exceeds Eq. (6)'s by 2.0 pN there. This is where the paper's
+closed form stops being a good approximation: when loading outruns escape,
+Eq. (6) collapses the late transitions onto f_c.
 
 **What this establishes.**
 
@@ -249,6 +261,9 @@ Force spectrum (V2 MLE, beyond): PDE − Eq. 6 exact mean = +0.09, +0.11,
    paper's Kramers formula, so the forward model has no free parameter of
    its own. Different (U‡, ξ‡, Γ₀) along Version 2's ridge give nearly the
    same p(f | ḟ) here too — the non-identifiability of V2 carries over.
+5. The PDE is independently confirmed by a Langevin simulation (test I):
+   the 0.2 pN gap between the PDE and Eq. (6) is physics — the steady-flux
+   approximation — not discretisation.
 
 ## 9. Limitations
 

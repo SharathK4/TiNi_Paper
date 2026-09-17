@@ -7,38 +7,38 @@
         "n_cells": 125,
         "n_steps": 5000,
         "h_A": 0.4370656,
-        "dt_ps": 0.0694949153533947,
-        "mean_pN": 19.884485180392815,
-        "sd_pN": 2.820245515257774,
-        "duration_s": 0.324
+        "dt_ps": 0.09034338995941311,
+        "mean_pN": 19.88500666876071,
+        "sd_pN": 2.820684340418891,
+        "duration_s": 0.313
       },
       {
         "level": 1,
         "n_cells": 250,
         "n_steps": 5000,
         "h_A": 0.2185328,
-        "dt_ps": 0.0694949153533947,
-        "mean_pN": 19.886329428296854,
-        "sd_pN": 2.8202412727120363,
-        "duration_s": 0.354,
-        "l1_vs_previous": 0.0005684020408046914,
-        "mean_change_pN": 0.0018442479040388093
+        "dt_ps": 0.09034338995941311,
+        "mean_pN": 19.88685091577829,
+        "sd_pN": 2.8206801017501735,
+        "duration_s": 0.344,
+        "l1_vs_previous": 0.0005682869030931604,
+        "mean_change_pN": 0.001844247017579903
       },
       {
         "level": 2,
         "n_cells": 500,
         "n_steps": 5000,
         "h_A": 0.1092664,
-        "dt_ps": 0.0694949153533947,
-        "mean_pN": 19.88679060173513,
-        "sd_pN": 2.820240207016414,
-        "duration_s": 0.4,
-        "l1_vs_previous": 0.00014213417936239148,
-        "mean_change_pN": 0.00046117343827489776
+        "dt_ps": 0.09034338995941311,
+        "mean_pN": 19.887312088976657,
+        "sd_pN": 2.820679037031876,
+        "duration_s": 0.389,
+        "l1_vs_previous": 0.00014210544974033613,
+        "mean_change_pN": 0.00046117319836724846
       }
     ],
-    "observed_order_mean": 1.9996512689590187,
-    "richardson_error_estimate_pN": 0.00015377403417886194
+    "observed_order_mean": 1.9996513260174409,
+    "richardson_error_estimate_pN": 0.0001537739460742238
   },
   "time": {
     "axis": "time",
@@ -48,38 +48,38 @@
         "n_cells": 125,
         "n_steps": 5000,
         "h_A": 0.4370656,
-        "dt_ps": 0.0694949153533947,
-        "mean_pN": 19.884485180392815,
-        "sd_pN": 2.820245515257774,
-        "duration_s": 0.33
+        "dt_ps": 0.09034338995941311,
+        "mean_pN": 19.88500666876071,
+        "sd_pN": 2.820684340418891,
+        "duration_s": 0.315
       },
       {
         "level": 1,
         "n_cells": 125,
         "n_steps": 10000,
         "h_A": 0.4370656,
-        "dt_ps": 0.03474745767669735,
-        "mean_pN": 19.883616076575393,
-        "sd_pN": 2.819514128906998,
-        "duration_s": 0.648,
-        "l1_vs_previous": 0.0003692794769207927,
-        "mean_change_pN": -0.0008691038174220012
+        "dt_ps": 0.04517169497970656,
+        "mean_pN": 19.883876802017195,
+        "sd_pN": 2.819733546266703,
+        "duration_s": 0.63,
+        "l1_vs_previous": 0.00048003124633817665,
+        "mean_change_pN": -0.0011298667435148957
       },
       {
         "level": 2,
         "n_cells": 125,
         "n_steps": 20000,
         "h_A": 0.4370656,
-        "dt_ps": 0.017373728838348677,
-        "mean_pN": 19.88318154504169,
-        "sd_pN": 2.8191484305376973,
-        "duration_s": 1.312,
-        "l1_vs_previous": 0.0001846612048570347,
-        "mean_change_pN": -0.0004345315337026534
+        "dt_ps": 0.02258584748985328,
+        "mean_pN": 19.88331190307696,
+        "sd_pN": 2.8192581404121224,
+        "duration_s": 1.256,
+        "l1_vs_previous": 0.0002400511490718927,
+        "mean_change_pN": -0.0005648989402331495
       }
     ],
-    "observed_order_mean": 1.000067645802627,
-    "richardson_error_estimate_pN": 0.0004344907875071044
+    "observed_order_mean": 1.000087931968034,
+    "richardson_error_estimate_pN": 0.0005648300855781628
   },
   "note": "levels 0\u20132 double the resolution each time; the run itself uses the finest grid level and the finest time level"
 }

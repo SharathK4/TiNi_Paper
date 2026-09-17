@@ -1,18 +1,19 @@
 {
-  "run_id": "20260917-231034-3e69",
+  "run_id": "fwd-inverse-latest",
   "config": {
     "parameter_source": "inverse:latest",
     "inverse_run_id": null,
     "custom": {},
     "force_rate": null,
     "temperature_K": 300.0,
-    "n_cells": 200,
-    "n_steps": 8000,
+    "n_cells": 250,
+    "n_steps": 20000,
     "theta": 1.0,
     "boundary": "beyond_barrier",
     "margin_kBT": 4.0,
     "xi_left_factor": 0.6,
     "n_snapshots": 80,
+    "t_end_factor": 1.3,
     "validation_enabled": true,
     "convergence_enabled": true,
     "spectrum_enabled": true,
@@ -20,7 +21,7 @@
     "model_version": "smoluchowski-fv-sg-be-1"
   },
   "model_version": "smoluchowski-fv-sg-be-1",
-  "code_hash": "131c2bd8b65a",
+  "code_hash": "054cd11009bf",
   "parameters": {
     "U_barrier_pN_A": 539.4193580592402,
     "xi_barrier_A": 25.606920937822025,
@@ -50,8 +51,8 @@
   "grid": {
     "xi_L_A": -15.364152562693214,
     "xi_A_A": 33.10334704236942,
-    "n_cells": 200,
-    "h_A": 0.24233749802531318
+    "n_cells": 250,
+    "h_A": 0.19386999842025054
   },
   "boundary": {
     "boundary": "beyond_barrier",
@@ -61,8 +62,9 @@
     "xi_L_A": -15.364152562693214,
     "U0_at_xi_L_kBT": 19.69127247126945
   },
-  "t_end_ps": 334.9338837226665,
-  "dt_ps": 0.041866735465333316,
-  "created_at": 1789666834.5702026,
-  "created_at_iso": "2026-09-17T23:10:34"
+  "t_end_ps": 435.41404883946643,
+  "t_fc_ps": 334.9338837226665,
+  "dt_ps": 0.021770702441973322,
+  "created_at": 1789668366.868311,
+  "created_at_iso": "2026-09-17T23:36:06"
 }
