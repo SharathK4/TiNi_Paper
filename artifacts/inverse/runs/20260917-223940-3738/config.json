@@ -1,0 +1,82 @@
+{
+  "run_id": "20260917-223940-3738",
+  "config": {
+    "source": "rate_x_time",
+    "smoothing_points": null,
+    "window_ps": null,
+    "reference_set": "pdf_mle",
+    "bounds": {
+      "U_barrier": [
+        100.0,
+        3000.0
+      ],
+      "xi_barrier": [
+        2.0,
+        200.0
+      ],
+      "gamma0": [
+        1e-14,
+        100.0
+      ]
+    },
+    "start_factors": [
+      1.0,
+      0.5,
+      2.0
+    ],
+    "maxiter": 4000,
+    "maxfev": 8000,
+    "xatol": 1e-06,
+    "fatol": 1e-08,
+    "polish": true,
+    "constrained": [
+      [
+        "xi_barrier"
+      ],
+      [
+        "U_barrier"
+      ],
+      [
+        "gamma0"
+      ]
+    ],
+    "hessian_step": 0.001,
+    "profile_points": 21,
+    "profile_span": {
+      "U_barrier": 3.0,
+      "xi_barrier": 3.0,
+      "gamma0": 30.0
+    },
+    "bootstrap_n": 100,
+    "seed": 1,
+    "sensitivity_windows_ps": [
+      50.0,
+      100.0,
+      150.0
+    ],
+    "sensitivity_smoothings": [
+      7,
+      15,
+      31
+    ],
+    "sensitivity_sources": [
+      "rate_x_time",
+      "smoothed_peak"
+    ],
+    "synthetic_enabled": true,
+    "synthetic_replicates": 5,
+    "model_version": "eq6-mle-1"
+  },
+  "model_version": "eq6-mle-1",
+  "code_hash": "9b8dd5afac12",
+  "dataset_fingerprint": "6f9ebf9447517e59",
+  "sample_fingerprint": "8d51315d54f56bc7",
+  "kBT_pN_A": 41.41947,
+  "reference": {
+    "U_barrier": 638.14,
+    "xi_barrier": 29.2,
+    "gamma0": 3.96e-07
+  },
+  "created_at": 1789664981.0036318,
+  "created_at_iso": "2026-09-17T22:39:41"
+}

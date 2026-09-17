@@ -88,3 +88,50 @@ CPU only.
    from Keystone; swap it before any public use.
 6. A `.prev` copy is kept for every file but there is no rotation beyond one
    generation.
+
+
+---
+
+# Version 2 — inverse problem (2026-09-17)
+
+## Stage 1 — scientific analysis
+* `docs/INVERSE_PROBLEM.md`: the paper's two inverse formulations, known and
+  unknown quantities for a single-rate dataset, identifiability argument, a
+  typo in the paper's ω(ψ), the residual mass ψ(f_c), numerical and
+  validation plan. Three readings of "the inverse problem" laid out; the
+  user confirmed (A): MLE of Eq. (6) with Eq. (8) evaluated forward only.
+
+## Stage 2 — mathematical baseline
+* `tini/inverse/model.py`: Eqs. 3–8 in log-space dimensionless form with
+  overflow guards, exact moments by quadrature, analytic inverse-CDF
+  sampler. 22 tests on identities and limiting cases.
+
+## Stage 3 — data and inference pipeline
+* `tini/inverse/{data,density,likelihood,fit,uncertainty,diagnostics,
+  synthetic,runs}.py`; `/api/inverse/*`; `python -m tini inverse`.
+* Every run is a directory of per-phase JSON files; resuming a run_id skips
+  completed phases (tested); a new run never touches an old one (tested);
+  cancel keeps completed phases (tested). Code hash and dataset fingerprint
+  recorded per run.
+* Full run with defaults: 19 s, single-threaded.
+
+## Stage 4 — validation
+* Synthetic recovery at three designs (§10 of the spec); paper-design
+  recovery test; Eq. (8) vs Fig. 3 readings; LR tests of Table 1 against
+  the fit; sensitivity to both V1 prototype choices.
+
+## Stage 5–6 — frontend and integration
+* `#inverse` route, seven sections A–G. Cards removed on both pages; sections
+  separated by whitespace and a hairline; prose cut to one sentence per
+  section; readouts limited to what a reader would quote. Measured
+  quantities in terracotta, inferred in slate, the paper's in light slate.
+* Verified in the browser: run started from the API completes in the
+  background with live progress; latest run loads; previous runs reopen.
+
+## Stage 7 — review
+* 61 tests pass; `tsc -b` and `vite build` clean.
+* Open items: the profile scan for U‡ is open above within a 3× span — a
+  wider span would find the crossing but the answer (weakly identified) is
+  the same; bootstrap draws that hit the U‡ bound are reported as a fraction
+  rather than clipped; no multi-rate data exist to attempt the paper's
+  method (B).

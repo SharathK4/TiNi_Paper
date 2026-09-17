@@ -2,8 +2,8 @@
   "runs": [
     {
       "run_id": "trial-01",
-      "completed_at": 1789622415.630507,
-      "completed_at_iso": "2026-09-17T10:50:15",
+      "completed_at": 1789622453.8958135,
+      "completed_at_iso": "2026-09-17T10:50:53",
       "source": "rate_x_time",
       "n": 100,
       "params": {

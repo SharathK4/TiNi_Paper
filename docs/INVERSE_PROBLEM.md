@@ -1,8 +1,8 @@
 # Version 2 — inverse problem specification
 
-Status: **formulation for review** (Stage 1). Nothing in this document is
-implemented yet except the forward model of §3, which every interpretation
-below needs.
+Status: **implemented** (interpretation (A) of §4, confirmed by the user on
+2026-09-17). Results on the real dataset are in §10; the run record is in
+`artifacts/inverse/runs/`.
 
 Source: Maitra & Gururajan, Sci. Rep. 15:3008 (2025), sections *Methods —
 Estimation of parameterised landscape* (Eq. 1), *Results — Quantitative
@@ -210,3 +210,53 @@ Consequences for V2:
 | 4 | synthetic-recovery tests; paper comparison; sensitivity to V1 assumptions |
 | 5–6 | inverse-problem page in the frontend (sections A–G of the brief) |
 | 7 | review, stability, docs, commit |
+
+## 10. Results on this dataset (run `trial-01`, defaults, seed 0)
+
+Unconstrained maximum likelihood, 100 events, ḟ = 0.0943 pN/ps:
+
+| parameter | MLE | Fisher s.e. | 95 % profile | 95 % bootstrap (200) | Table 1 col. 1 |
+| --- | --- | --- | --- | --- | --- |
+| U‡ [pN·Å] | 539 | 49 | 461 – unbounded (3× scan) | 482 – 3000 (7 % at bound) | 638.14 |
+| ξ‡ [Å] | 25.6 | 6.0 | 14.6 – 35.7 | 17.3 – 32.1 | 29.2 |
+| Γ0 [ps⁻¹] | 2.5×10⁻⁶ | 3.7×10⁻⁶ | 1.5×10⁻⁷ – 3.6×10⁻⁵ | 3.4×10⁻⁷ – 1.5×10⁻⁵ | 3.96×10⁻⁷ |
+| f_c [pN] | 31.6 | — | — | 26.9 – 253 | 32.8 |
+
+Goodness of fit: KS D = 0.074, p = 0.62; Pearson χ² p = 0.17; model mean
+18.52 pN vs sample 18.52; model s.d. 3.10 vs sample 3.03. Hessian condition
+number 1.2×10⁴, corr(ln ξ‡, ln Γ0) = −0.98 — the single-rate ridge.
+
+Paper's Table 1 values at this ḟ: −ln L is 8.2 (col. 1) and 12.2 (col. 2)
+higher than the fit; LR p = 9×10⁻⁴ and 2×10⁻⁵. Predicted means 19.7 and
+19.9 pN against the sample's 18.5. **The gap is the V1 peak picker**: refitting
+with the smoothed-peak definition of f‡ gives U‡ = 655, ξ‡ = 33.8,
+Γ0 = 8.7×10⁻⁸ — Table 1 column 2 to within its own standard errors — and
+wider smoothing (31 samples) gives U‡ = 574, ξ‡ = 29.2. The ḟ window
+(50/100/150 ps) changes nothing beyond the second decimal.
+
+Constrained fits (one parameter at Table 1) each cost ΔNLL < 0.8 (LR p ≥
+0.21): the paper's values are compatible with this sample along the ridge.
+
+Synthetic recovery (truth = Table 1 col. 1, 10 replicates):
+
+| design | events | U‡ spread (decades) | ξ‡ spread | Γ0 spread | Γ0 within ×2 |
+| --- | --- | --- | --- | --- | --- |
+| this dataset, S = 100 | 100 | 0.18 | 0.17 | 1.07 | 30 % |
+| S = 400, one rate | 400 | 0.05 | 0.09 | 0.61 | 60 % |
+| paper: 4 rates × 400 | 1600 | 0.01 | 0.03 | 0.18 | 100 % |
+
+Conclusion: from this dataset quote f_c ≈ 32 pN, U‡ ≈ 540 pN·Å (13 k_BT) and
+ξ‡ ≈ 26 Å with ±20 % uncertainty; Γ0 only to an order of magnitude. The
+disagreement with the paper's point values is of the size of the prototype
+peak picker's bias and is not evidence against the paper.
+
+## 11. Verified against the paper
+
+* Eq. (8) with Table 1 col. 2 reproduces the seven Fig. 3 symbols (read by
+  eye, ±1 pN) to within 1 pN at every rate — an independent check of the
+  Eq. (8) implementation. At rate (vii) Eq. (8) and the exact mean differ by
+  1.1 pN because ψ(f_c) is no longer negligible there.
+* Forward-model identities (∫p + ψ(f_c) = 1, p = −dψ/df, small-force slope,
+  ⟨f⟩ increasing with ḟ) hold to numerical precision (22 tests).
+* Synthetic data at the paper's design recover Table 1 to a few percent
+  (`test_paper_design_recovers_truth`).

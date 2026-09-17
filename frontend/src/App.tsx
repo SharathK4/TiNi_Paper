@@ -18,9 +18,41 @@ import { LandscapePanel } from './components/LandscapePanel'
 import { StatusStrip } from './components/StatusStrip'
 import { SummaryPanel } from './components/SummaryPanel'
 import { TracePanel } from './components/TracePanel'
+import { InversePage } from './components/inverse/InversePage'
 import { fixed } from './lib/format'
 
+function useRoute(): 'traces' | 'inverse' {
+  const read = () => (window.location.hash.replace('#', '') === 'inverse' ? 'inverse' : 'traces')
+  const [route, setRoute] = useState<'traces' | 'inverse'>(read)
+  useEffect(() => {
+    const onHash = () => {
+      setRoute(read())
+      window.scrollTo(0, 0)
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+  return route
+}
+
 export function App() {
+  const route = useRoute()
+  return (
+    <main className="page">
+      <nav className="nav" aria-label="versions">
+        <a className={`nav__link ${route === 'traces' ? 'is-on' : ''}`} href="#traces">
+          <span className="nav__index">v1</span> Force traces &amp; landscape
+        </a>
+        <a className={`nav__link ${route === 'inverse' ? 'is-on' : ''}`} href="#inverse">
+          <span className="nav__index">v2</span> Inverse problem
+        </a>
+      </nav>
+      {route === 'inverse' ? <InversePage /> : <TracesPage />}
+    </main>
+  )
+}
+
+function TracesPage() {
   const { progress, offline, run, cancel } = useProgress()
   const [version, setVersion] = useState(0)
   const wasRunning = useRef(false)
@@ -52,7 +84,7 @@ export function App() {
   const fr = summary.data?.force_rate
 
   return (
-    <main className="page">
+    <>
       <header className="masthead">
         <h1 className="wordmark">TiNi</h1>
         <p className="standfirst">
@@ -97,6 +129,6 @@ export function App() {
         landscape coordinate ξ; the two are never used interchangeably here. Backend: FastAPI + NumPy, <code>backend/tini</code>. Checkpoints and static charts:{' '}
         <code>artifacts/</code>.
       </p>
-    </main>
+    </>
   )
 }

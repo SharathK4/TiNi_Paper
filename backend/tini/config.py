@@ -64,6 +64,20 @@ PAPER_RATES = [
     {"index": "vii", "ext_rate_A_per_ps": 2.35e-2,  "force_rate_pN_per_ps": 9.242e-1, "n_traces": 400},
 ]
 
+# --- paper, Fig. 3: mean critical force vs force rate, READ BY EYE ---------
+# Not digitised. Symbols were read from the figure to about ±1 pN; they are
+# kept only to place this dataset's single point on the paper's force
+# spectrum and are labelled as approximate wherever they are shown.
+FIG3_READINGS_BY_EYE = [
+    {"index": "i",   "force_rate_pN_per_ps": 3.246e-3, "mean_f_pN": 12.5, "uncertainty_pN": 1.0},
+    {"index": "ii",  "force_rate_pN_per_ps": 7.137e-3, "mean_f_pN": 15.3, "uncertainty_pN": 1.0},
+    {"index": "iii", "force_rate_pN_per_ps": 1.482e-2, "mean_f_pN": 16.4, "uncertainty_pN": 1.0},
+    {"index": "iv",  "force_rate_pN_per_ps": 3.097e-2, "mean_f_pN": 17.4, "uncertainty_pN": 1.0},
+    {"index": "v",   "force_rate_pN_per_ps": 9.452e-2, "mean_f_pN": 19.5, "uncertainty_pN": 1.0},
+    {"index": "vi",  "force_rate_pN_per_ps": 2.927e-1, "mean_f_pN": 22.0, "uncertainty_pN": 1.0},
+    {"index": "vii", "force_rate_pN_per_ps": 9.242e-1, "mean_f_pN": 26.5, "uncertainty_pN": 1.0},
+]
+
 
 @dataclass
 class Settings:

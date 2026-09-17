@@ -6,8 +6,13 @@ tension (rate (v) of Maitra & Gururajan, Sci. Rep. 15:3008, 2025), loaded,
 validated, averaged, and set beside the paper's cubic free-energy landscape
 and its tilt under force.
 
-Not in this version: fitting landscape parameters to the data (inverse
-problem) and the Smoluchowski dynamics. Those are Versions 2 and 3.
+**Version 2: the inverse problem.** Maximum-likelihood inference of
+(U‡, ξ‡, Γ₀) from the critical-force sample (paper Eqs. 1, 6), with profile
+likelihoods, bootstrap, synthetic recovery and a comparison with the paper's
+Table 1. Open `#inverse` in the app, or `python -m tini inverse`. The
+formulation, its limits and the results are in `docs/INVERSE_PROBLEM.md`.
+
+Not in this version: the Smoluchowski dynamics (Version 3).
 
 ## Layout
 
@@ -23,7 +28,8 @@ backend/tini/        FastAPI + NumPy pipeline
   progress.py        progress.json: stage, files, %, elapsed, ETA, last checkpoint
   io_atomic.py       write-to-temp + os.replace; previous copy kept as .prev
   api.py             the endpoints
-backend/tests/       28 tests: physics identities, validation, resume, cancel
+backend/tini/inverse/ Version 2: forward model, likelihood, fit, uncertainty, diagnostics, runs
+backend/tests/       61 tests: physics identities, validation, resume, inference recovery
 frontend/            Vite + React + TypeScript, Recharts, KaTeX (light theme only)
 data/raw/Force_traces/   the 100 .dat files (3.9 MB)
 artifacts/           everything the pipeline writes (see below)

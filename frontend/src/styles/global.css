@@ -80,9 +80,9 @@ button {
 .page {
   position: relative;
   z-index: 1;
-  max-width: 1240px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 56px 32px 120px;
+  padding: 64px 40px 160px;
 }
 
 @media (max-width: 720px) {
@@ -93,7 +93,7 @@ button {
 
 .masthead {
   animation: rise var(--slow) var(--ease-out) both;
-  margin-bottom: 40px;
+  margin-bottom: 96px;
 }
 
 .wordmark {
@@ -127,21 +127,19 @@ button {
 }
 
 /* ------------------------------------------------------------ panels */
+/* Sections sit directly on the paper, separated by a hairline and a lot of
+ * air. Nothing is boxed; the charts are the objects on the page. */
 .panel {
   position: relative;
-  background: var(--surface);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius);
-  box-shadow: var(--lift-1);
-  padding: 36px 40px 40px;
-  margin-top: 28px;
+  padding: 72px 0 40px;
+  margin-top: 40px;
+  border-top: 1px solid var(--border-soft);
   animation: rise var(--slow) var(--ease-out) both;
 }
 
 @media (max-width: 720px) {
   .panel {
-    padding: 24px 18px 26px;
-    border-radius: 18px;
+    padding: 44px 0 24px;
   }
 }
 
@@ -162,26 +160,27 @@ button {
 }
 
 .panel__lead {
-  max-width: 60ch;
-  margin-top: 12px;
-  font-size: 15px;
+  max-width: 58ch;
+  margin-top: 14px;
+  font-size: 15.5px;
+  line-height: 1.6;
   color: var(--ink-2);
 }
 
 .panel__body {
-  margin-top: 28px;
+  margin-top: 44px;
 }
 
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 28px;
+  gap: 48px;
 }
 
 .grid-3 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 28px;
+  gap: 36px;
 }
 
 @media (max-width: 900px) {
@@ -243,10 +242,8 @@ button {
 .readouts {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 36px;
-  margin-top: 20px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border-soft);
+  gap: 12px 48px;
+  margin-top: 36px;
 }
 
 .readout {
@@ -286,8 +283,8 @@ button {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 18px 32px;
-  margin-bottom: 22px;
+  gap: 18px 40px;
+  margin-bottom: 36px;
 }
 
 .control {
@@ -589,12 +586,8 @@ table.facts td:last-child {
   flex-wrap: wrap;
   align-items: center;
   gap: 10px 22px;
-  margin-top: 26px;
-  padding: 14px 20px;
-  border: 1px solid var(--border-soft);
-  border-radius: 999px;
-  background: var(--surface);
-  box-shadow: var(--lift-1);
+  margin-top: 36px;
+  padding: 0;
   font-size: 12.5px;
   color: var(--ink-2);
   animation: rise var(--slow) var(--ease-out) both;
@@ -705,4 +698,181 @@ table.facts td:last-child {
   font-size: 12px;
   color: var(--ink-3);
   max-width: 80ch;
+}
+
+/* ------------------------------------------------------------ navigation */
+.nav {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 56px;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nav__link {
+  color: var(--ink-3);
+  text-decoration: none;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid transparent;
+  transition: color var(--fast) var(--ease), border-color var(--fast) var(--ease);
+}
+
+.nav__link:hover {
+  color: var(--ink-1);
+}
+
+.nav__link.is-on {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+.nav__index {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-4);
+  margin-right: 6px;
+}
+
+/* ------------------------------------------------------------ headline result */
+.headline {
+  padding: 0;
+}
+
+.headline__label {
+  font-size: 12px;
+  color: var(--ink-2);
+  margin-bottom: 14px;
+}
+
+.headline__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 18px 28px;
+}
+
+.headline__name {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.headline__name .katex {
+  font-size: 1.2em;
+}
+
+.headline__value {
+  font-size: 40px;
+  line-height: 1.15;
+  color: var(--model);
+  margin-top: 2px;
+}
+
+.headline__value small {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-left: 4px;
+}
+
+.headline__ci {
+  font-size: 12.5px;
+  color: var(--ink-1);
+  margin-top: 4px;
+}
+
+.headline__paper {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.headline__note {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--ink-1);
+  max-width: 90ch;
+}
+
+/* ------------------------------------------------------------ tags for provenance */
+.tag--inferred {
+  border-color: rgba(47, 58, 99, 0.45);
+  color: var(--model);
+}
+
+.tag--measured {
+  border-color: rgba(181, 70, 42, 0.4);
+  color: var(--accent);
+}
+
+.tag--paper {
+  border-color: rgba(107, 119, 168, 0.5);
+  color: var(--model-2);
+}
+
+/* ------------------------------------------------------------ static tables, fields, code */
+.table-wrap--auto {
+  max-height: none;
+}
+
+table.data--static tbody tr {
+  cursor: default;
+}
+
+table.data--static tbody tr:hover {
+  background: transparent;
+}
+
+table.data td i {
+  color: var(--ink-3);
+}
+
+.numfield {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  width: 100%;
+}
+
+.numfield:focus {
+  outline: none;
+  border-color: var(--ink-2);
+}
+
+.code-block {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-1);
+  overflow: auto;
+  max-height: 320px;
+}
+
+.prose ul li + li {
+  margin-top: 6px;
+}
+
+/* readability: slightly larger notes and labels than v1 */
+.figure__note {
+  font-size: 13px;
+}
+
+.readout__label {
+  font-size: 11.5px;
+}
+
+.eq {
+  background: transparent;
+  padding: 10px 0;
+  border-radius: 0;
+}
+
+.figure + .figure,
+.figure-stack > * + * {
+  margin-top: 40px;
 }

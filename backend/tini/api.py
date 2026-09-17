@@ -20,7 +20,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from . import statistics as st
-from .config import K_B_T_PN_ANGSTROM, PAPER_PARAMETER_SETS, PAPER_RATES, TEMPERATURE_K, load_settings
+from .config import FIG3_READINGS_BY_EYE, K_B_T_PN_ANGSTROM, PAPER_PARAMETER_SETS, PAPER_RATES, TEMPERATURE_K, load_settings
 from .io_atomic import read_json
 from .pipeline import STAGES, Pipeline
 from .potential import Landscape, potential_curves
@@ -361,6 +361,8 @@ def inverse_spec() -> Any:
         "paper_parameter_sets": PAPER_PARAMETER_SETS,
         "kBT_pN_A": K_B_T_PN_ANGSTROM,
         "temperature_K": TEMPERATURE_K,
+        "paper_rates": PAPER_RATES,
+        "fig3_readings_by_eye": FIG3_READINGS_BY_EYE,
     }
 
 
