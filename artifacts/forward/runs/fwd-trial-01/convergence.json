@@ -1,0 +1,85 @@
+{
+  "grid": {
+    "axis": "grid",
+    "levels": [
+      {
+        "level": 0,
+        "n_cells": 125,
+        "n_steps": 5000,
+        "h_A": 0.3877399968405011,
+        "dt_ps": 0.06698677674453331,
+        "mean_pN": 18.75735307136346,
+        "sd_pN": 3.149165497008255,
+        "duration_s": 0.323
+      },
+      {
+        "level": 1,
+        "n_cells": 250,
+        "n_steps": 5000,
+        "h_A": 0.19386999842025054,
+        "dt_ps": 0.06698677674453331,
+        "mean_pN": 18.759175182214463,
+        "sd_pN": 3.1491590991361464,
+        "duration_s": 0.367,
+        "l1_vs_previous": 0.0004998915366986131,
+        "mean_change_pN": 0.0018221108510019235
+      },
+      {
+        "level": 2,
+        "n_cells": 500,
+        "n_steps": 5000,
+        "h_A": 0.09693499921012527,
+        "dt_ps": 0.06698677674453331,
+        "mean_pN": 18.75963039518111,
+        "sd_pN": 3.1491587516478114,
+        "duration_s": 0.404,
+        "l1_vs_previous": 0.0001250155673060496,
+        "mean_change_pN": 0.00045521296664574606
+      }
+    ],
+    "observed_order_mean": 2.0009971722418696,
+    "richardson_error_estimate_pN": 0.00015159789723430826
+  },
+  "time": {
+    "axis": "time",
+    "levels": [
+      {
+        "level": 0,
+        "n_cells": 125,
+        "n_steps": 5000,
+        "h_A": 0.3877399968405011,
+        "dt_ps": 0.06698677674453331,
+        "mean_pN": 18.75735307136346,
+        "sd_pN": 3.149165497008255,
+        "duration_s": 0.322
+      },
+      {
+        "level": 1,
+        "n_cells": 125,
+        "n_steps": 10000,
+        "h_A": 0.3877399968405011,
+        "dt_ps": 0.033493388372266654,
+        "mean_pN": 18.756507897028985,
+        "sd_pN": 3.148447767798095,
+        "duration_s": 0.656,
+        "l1_vs_previous": 0.0003182589243697985,
+        "mean_change_pN": -0.000845174334475729
+      },
+      {
+        "level": 2,
+        "n_cells": 125,
+        "n_steps": 20000,
+        "h_A": 0.3877399968405011,
+        "dt_ps": 0.016746694186133327,
+        "mean_pN": 18.75608532647456,
+        "sd_pN": 3.148088897427003,
+        "duration_s": 1.309,
+        "l1_vs_previous": 0.00015914901009676544,
+        "mean_change_pN": -0.0004225705544236291
+      }
+    ],
+    "observed_order_mean": 1.00005671657278,
+    "richardson_error_estimate_pN": 0.00042253733140739817
+  },
+  "note": "levels 0\u20132 double the resolution each time; the run itself uses the finest grid level and the finest time level"
+}

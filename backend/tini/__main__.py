@@ -6,6 +6,7 @@
     python -m tini status           # print progress.json + checkpoints
     python -m tini serve            # start the API on :8000
     python -m tini inverse          # Version 2: run the inverse problem (new run)
+    python -m tini forward          # Version 3: forward Smoluchowski run (latest V2 parameters)
     python -m tini inverse --run-id 20260917-1030-ab12   # resume that run
 """
 
@@ -29,6 +30,12 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("status")
     s = sub.add_parser("serve")
     s.add_argument("--port", type=int, default=8000)
+    fwd = sub.add_parser("forward")
+    fwd.add_argument("--run-id", default=None)
+    fwd.add_argument("--source", default="inverse:latest", help="paper:pdf_mle | paper:mean_lsq | inverse:latest | inverse:run | custom")
+    fwd.add_argument("--boundary", default="beyond_barrier")
+    fwd.add_argument("--cells", type=int, default=250)
+    fwd.add_argument("--steps", type=int, default=20000)
     inv = sub.add_parser("inverse")
     inv.add_argument("--run-id", default=None)
     inv.add_argument("--source", default="rate_x_time")
@@ -49,6 +56,13 @@ def main(argv: list[str] | None = None) -> int:
         p = Pipeline(settings)
         print(json.dumps({"progress": p.progress.snapshot(), "checkpoints": p.registry.all()}, indent=2, default=str))
         return 0
+    if args.cmd == "forward":
+        from .forward.runs import ForwardConfig, ForwardRun
+        cfg = ForwardConfig(parameter_source=args.source, boundary=args.boundary, n_cells=args.cells, n_steps=args.steps)
+        run = ForwardRun(settings, cfg, run_id=args.run_id)
+        snap = run.run()
+        print(json.dumps({"run_id": run.run_id, "status": snap["status"], "elapsed_s": snap["elapsed_s"], "message": snap["message"], "stage_status": snap["stage_status"]}, indent=2))
+        return 0 if snap["status"] == "done" else 1
     if args.cmd == "inverse":
         from .inverse.runs import InverseConfig, InverseRun
         cfg = InverseConfig(source=args.source, bootstrap_n=args.bootstrap, synthetic_replicates=args.replicates, seed=args.seed)

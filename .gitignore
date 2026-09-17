@@ -12,3 +12,6 @@ artifacts/progress.json
 artifacts/config_used.json
 artifacts/inverse/progress.json
 artifacts/inverse/runs/*/*.prev
+artifacts/forward/progress.json
+artifacts/forward/runs/*/*.prev
+artifacts/forward/runs/*/solution.npz

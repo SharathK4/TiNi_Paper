@@ -488,3 +488,129 @@ def inverse_run_phase(run_id: str, phase: str) -> Any:
     if res is None:
         raise HTTPException(404, "phase file not found")
     return res
+
+
+# ================================================================== Version 3: forward Smoluchowski model
+from .forward.runs import MODEL_VERSION as FWD_MODEL_VERSION, PARAMETER_SOURCES, PHASES as FWD_PHASES, ForwardConfig, ForwardRun, code_hash as fwd_code_hash, list_runs as fwd_list_runs, load_run as fwd_load_run, resolve_force_rate, resolve_parameters  # noqa: E402
+from .forward.solver import BOUNDARIES, ForwardParams  # noqa: E402
+
+
+class _ForwardService:
+    def __init__(self) -> None:
+        self.current: ForwardRun | None = None
+
+    @property
+    def running(self) -> bool:
+        return self.current is not None and self.current.running
+
+    def progress(self) -> dict[str, Any]:
+        if self.current is not None:
+            snap = self.current.progress.snapshot()
+            snap["run_id"] = self.current.run_id
+        else:
+            from .progress import ProgressTracker
+            snap = ProgressTracker(ART / "forward", FWD_PHASES).snapshot()
+        snap["running"] = self.running
+        return snap
+
+
+_forward = _ForwardService()
+
+
+@app.get("/api/forward/spec")
+def forward_spec() -> Any:
+    return {
+        "model_version": FWD_MODEL_VERSION, "code_hash": fwd_code_hash(), "phases": FWD_PHASES,
+        "defaults": ForwardConfig().to_dict(), "parameter_sources": list(PARAMETER_SOURCES), "boundaries": list(BOUNDARIES),
+        "paper_parameter_sets": PAPER_PARAMETER_SETS, "paper_rates": PAPER_RATES, "fig3_readings_by_eye": FIG3_READINGS_BY_EYE,
+        "kBT_pN_A": K_B_T_PN_ANGSTROM, "temperature_K": TEMPERATURE_K,
+    }
+
+
+@app.get("/api/forward/parameters")
+def forward_parameters(source: str = Query("inverse:latest"), inverse_run_id: str | None = None, temperature_K: float = Query(300.0, gt=0, le=2000)) -> Any:
+    """Resolve a parameter source to (U‡, ξ‡, Γ0, η, D) without running."""
+    try:
+        params, prov = resolve_parameters(settings, ForwardConfig(parameter_source=source, inverse_run_id=inverse_run_id, temperature_K=temperature_K))
+        fdot, fprov = resolve_force_rate(settings, ForwardConfig())
+    except (ValueError, FileNotFoundError) as exc:
+        raise HTTPException(404 if isinstance(exc, FileNotFoundError) else 400, str(exc)) from exc
+    return {"parameters": params.to_dict(), "provenance": prov, "force_rate_pN_per_ps": fdot, "force_rate_provenance": fprov, "t_end_ps": params.f_c / fdot}
+
+
+class ForwardRunRequest(BaseModel):
+    config: dict[str, Any] = {}
+    run_id: str | None = None
+
+
+@app.post("/api/forward/run")
+def forward_run(req: ForwardRunRequest) -> dict[str, Any]:
+    if _forward.running:
+        raise HTTPException(409, "a forward run is already in progress")
+    if req.run_id is not None and Path(req.run_id).name != req.run_id:
+        raise HTTPException(400, "invalid run_id")
+    try:
+        cfg = ForwardConfig.from_dict(req.config)
+        cfg.settings()  # validates solver limits
+        if cfg.parameter_source not in PARAMETER_SOURCES:
+            raise ValueError(f"parameter_source must be one of {PARAMETER_SOURCES}")
+        if not (50 <= cfg.n_cells <= 4000 and 500 <= cfg.n_steps <= 400000):
+            raise ValueError("n_cells must be 50-4000 and n_steps 500-400000 for an interactive run")
+        if cfg.parameter_source == "custom":
+            ForwardParams(float(cfg.custom["U_barrier"]), float(cfg.custom["xi_barrier"]), float(cfg.custom["gamma0"]))
+    except (TypeError, ValueError, KeyError) as exc:
+        raise HTTPException(400, f"bad configuration: {exc}") from exc
+    if req.run_id is not None:
+        stored = fwd_load_run(settings, req.run_id, "config")
+        if stored:
+            cfg = ForwardConfig.from_dict(stored["config"])
+    run = ForwardRun(settings, cfg, run_id=req.run_id)
+    _forward.current = run
+    return {"run_id": run.run_async()}
+
+
+@app.post("/api/forward/cancel")
+def forward_cancel() -> dict[str, Any]:
+    if _forward.current is not None:
+        _forward.current.cancel()
+    return {"cancelling": _forward.running}
+
+
+@app.get("/api/forward/progress")
+def forward_progress() -> Any:
+    return _forward.progress()
+
+
+@app.get("/api/forward/runs")
+def forward_runs() -> Any:
+    return fwd_list_runs(settings)
+
+
+@app.get("/api/forward/latest")
+def forward_latest() -> Any:
+    lr = fwd_list_runs(settings)["latest"]
+    if not lr:
+        raise HTTPException(404, "no completed forward run yet")
+    res = fwd_load_run(settings, lr["run_id"])
+    if res is None:
+        raise HTTPException(404, "latest run has no result file")
+    return res
+
+
+@app.get("/api/forward/runs/{run_id}")
+def forward_run_result(run_id: str) -> Any:
+    res = fwd_load_run(settings, Path(run_id).name)
+    if res is None:
+        raise HTTPException(404, "run not found or not finished")
+    return res
+
+
+@app.get("/api/forward/runs/{run_id}/{phase}")
+def forward_run_phase(run_id: str, phase: str) -> Any:
+    allowed = {"config", "observables", "validation", "convergence", "spectrum", "result"}
+    if phase not in allowed:
+        raise HTTPException(400, f"phase must be one of {sorted(allowed)}")
+    res = fwd_load_run(settings, Path(run_id).name, phase)
+    if res is None:
+        raise HTTPException(404, "phase file not found")
+    return res

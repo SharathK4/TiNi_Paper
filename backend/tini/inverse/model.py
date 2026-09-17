@@ -67,7 +67,9 @@ class LandscapeKinetics:
         return self.gamma0 * self.kBT / (force_rate * self.xi_barrier)
 
     def eta(self) -> float:
-        """Friction constant from the paper's Γ0 = (1/2πη)(6U‡/ξ‡²) e^{−βU‡}  [1/ps]. Derived, not fitted."""
+        """Friction coefficient from the paper's Γ0 = (1/2πη)(6U‡/ξ‡²) e^{−βU‡}  [pN·ps/Å]. Derived, not fitted.
+        (The paper calls η "a friction constant in units of inverse time"; its own
+        formula fixes the unit as force per velocity. See docs/FORWARD_MODEL.md §2.)"""
         return (6.0 * self.U_barrier / self.xi_barrier**2) * np.exp(-self.a) / (2.0 * np.pi * self.gamma0)
 
     def to_dict(self, force_rate: float | None = None) -> dict[str, Any]:
@@ -78,7 +80,7 @@ class LandscapeKinetics:
             "kBT_pN_A": self.kBT,
             "f_c_pN": self.f_c,
             "U_barrier_kBT": self.a,
-            "eta_per_ps": float(self.eta()),
+            "eta_pN_ps_per_A": float(self.eta()),
         }
         if force_rate is not None:
             d["mu0"] = self.mu0(force_rate)

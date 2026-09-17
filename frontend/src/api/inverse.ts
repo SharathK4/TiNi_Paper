@@ -41,7 +41,7 @@ export type InvSample = {
 }
 
 export type InvModel = {
-  parameters: { f_c_pN: number; U_barrier_kBT: number; mu0: number; mu0_times_exp_a: number; eta_per_ps: number }
+  parameters: { f_c_pN: number; U_barrier_kBT: number; mu0: number; mu0_times_exp_a: number; eta_pN_ps_per_A: number }
   force_rate_pN_per_ps: number
   f_pN: number[]
   pdf: number[]
@@ -71,7 +71,7 @@ export type ParamResult = {
   paper: number
 }
 
-export type Derived = { f_c_pN: number; U_barrier_kBT: number; mu0: number; eta_per_ps: number; mean_eq8_pN: number; mean_exact_pN: number; sd_exact_pN: number; mode_pN: number; residual_mass: number }
+export type Derived = { f_c_pN: number; U_barrier_kBT: number; mu0: number; eta_pN_ps_per_A: number; mean_eq8_pN: number; mean_exact_pN: number; sd_exact_pN: number; mode_pN: number; residual_mass: number }
 export type LR = { statistic: number; df: number; pvalue: number }
 
 export type SynthSummary = Record<string, { truth?: number; median: number; p16: number; p84: number; median_ratio?: number; log10_spread_16_84?: number; within_factor_2?: number; within_20pct?: number }>

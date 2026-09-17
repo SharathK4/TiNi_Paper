@@ -1,0 +1,15 @@
+{
+  "runs": [
+    {
+      "run_id": "fwd-trial-01",
+      "completed_at": 1789666177.6843061,
+      "completed_at_iso": "2026-09-17T22:59:37",
+      "parameter_source": "inverse:latest",
+      "boundary": "beyond_barrier",
+      "force_rate": 0.09434118803329211,
+      "mean_pN": 18.757907441028042,
+      "n_cells": 250,
+      "n_steps": 20000
+    }
+  ]
+}
