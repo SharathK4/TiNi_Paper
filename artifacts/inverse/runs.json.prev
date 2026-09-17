@@ -1,0 +1,18 @@
+{
+  "runs": [
+    {
+      "run_id": "trial-01",
+      "completed_at": 1789622415.630507,
+      "completed_at_iso": "2026-09-17T10:50:15",
+      "source": "rate_x_time",
+      "n": 100,
+      "params": {
+        "U_barrier": 539.4193580592402,
+        "xi_barrier": 25.606920937822025,
+        "gamma0": 2.49690388421001e-06
+      },
+      "nll": 250.8989457527351,
+      "converged": true
+    }
+  ]
+}

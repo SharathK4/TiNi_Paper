@@ -5,6 +5,8 @@
     python -m tini run --stages inspect validate
     python -m tini status           # print progress.json + checkpoints
     python -m tini serve            # start the API on :8000
+    python -m tini inverse          # Version 2: run the inverse problem (new run)
+    python -m tini inverse --run-id 20260917-1030-ab12   # resume that run
 """
 
 from __future__ import annotations
@@ -27,6 +29,12 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("status")
     s = sub.add_parser("serve")
     s.add_argument("--port", type=int, default=8000)
+    inv = sub.add_parser("inverse")
+    inv.add_argument("--run-id", default=None)
+    inv.add_argument("--source", default="rate_x_time")
+    inv.add_argument("--bootstrap", type=int, default=200)
+    inv.add_argument("--replicates", type=int, default=10)
+    inv.add_argument("--seed", type=int, default=0)
     args = ap.parse_args(argv)
 
     settings = load_settings()
@@ -41,6 +49,13 @@ def main(argv: list[str] | None = None) -> int:
         p = Pipeline(settings)
         print(json.dumps({"progress": p.progress.snapshot(), "checkpoints": p.registry.all()}, indent=2, default=str))
         return 0
+    if args.cmd == "inverse":
+        from .inverse.runs import InverseConfig, InverseRun
+        cfg = InverseConfig(source=args.source, bootstrap_n=args.bootstrap, synthetic_replicates=args.replicates, seed=args.seed)
+        run = InverseRun(settings, cfg, run_id=args.run_id)
+        snap = run.run()
+        print(json.dumps({"run_id": run.run_id, "status": snap["status"], "elapsed_s": snap["elapsed_s"], "message": snap["message"], "stage_status": snap["stage_status"]}, indent=2))
+        return 0 if snap["status"] == "done" else 1
     if args.cmd == "serve":
         import uvicorn
         uvicorn.run("tini.api:app", host="127.0.0.1", port=args.port, reload=False)

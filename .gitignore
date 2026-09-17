@@ -10,3 +10,5 @@ frontend/dist/
 artifacts/traces.npz
 artifacts/progress.json
 artifacts/config_used.json
+artifacts/inverse/progress.json
+artifacts/inverse/runs/*/*.prev

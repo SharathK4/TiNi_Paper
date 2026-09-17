@@ -316,3 +316,173 @@ def chart_file(name: str) -> Any:
     if not p.exists() or p.suffix != ".png":
         raise HTTPException(404, "chart not found")
     return FileResponse(p, media_type="image/png")
+
+
+# ================================================================== Version 2: inverse problem
+from .inverse import density as _density  # noqa: E402
+from .inverse.data import SOURCES, prepare_sample  # noqa: E402
+from .inverse.model import LandscapeKinetics  # noqa: E402
+from .inverse.runs import MODEL_VERSION, PHASES, InverseConfig, InverseRun, code_hash, list_runs, load_run  # noqa: E402
+
+
+class _InverseService:
+    """Holds the in-flight run (one at a time) and the progress tracker."""
+
+    def __init__(self) -> None:
+        self.current: InverseRun | None = None
+
+    @property
+    def running(self) -> bool:
+        return self.current is not None and self.current.running
+
+    def progress(self) -> dict[str, Any]:
+        if self.current is not None:
+            snap = self.current.progress.snapshot()
+            snap["run_id"] = self.current.run_id
+        else:
+            # no run in this process: read the file left by the last one
+            from .progress import ProgressTracker
+            snap = ProgressTracker(ART / "inverse", PHASES).snapshot()
+        snap["running"] = self.running
+        return snap
+
+
+_inverse = _InverseService()
+
+
+@app.get("/api/inverse/spec")
+def inverse_spec() -> Any:
+    return {
+        "model_version": MODEL_VERSION,
+        "code_hash": code_hash(),
+        "phases": PHASES,
+        "defaults": InverseConfig().to_dict(),
+        "sources": list(SOURCES),
+        "paper_parameter_sets": PAPER_PARAMETER_SETS,
+        "kBT_pN_A": K_B_T_PN_ANGSTROM,
+        "temperature_K": TEMPERATURE_K,
+    }
+
+
+@app.get("/api/inverse/sample")
+def inverse_sample(source: str = Query("rate_x_time"), smoothing: int | None = Query(None, ge=1, le=201), window: float | None = Query(None, gt=1.0, le=600.0)) -> Any:
+    if source not in SOURCES:
+        raise HTTPException(400, f"source must be one of {SOURCES}")
+    try:
+        smp = prepare_sample(settings, source, smoothing, window)
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    f = smp.forces
+    grid = np.linspace(0.0, max(f.max() * 1.25, 1.0), 300)
+    return {**smp.summary(), "forces_pN": _round(f, 4), "histogram": _density.histogram_density(f), "kde": _density.kde(f, grid), "ecdf": _density.ecdf(f)}
+
+
+@app.get("/api/inverse/model")
+def inverse_model(
+    U: float = Query(..., gt=0), xi: float = Query(..., gt=0), gamma0: float = Query(..., gt=0),
+    fdot: float | None = Query(None, gt=0), n: int = Query(300, ge=50, le=1000),
+) -> Any:
+    rate = fdot
+    if rate is None:
+        fr = read_json(ART / "force_rate.json", default={}) or {}
+        rate = fr.get("force_rate_pN_per_ps")
+        if rate is None:
+            raise HTTPException(404, "no force rate available — run the V1 pipeline or pass fdot")
+    land = LandscapeKinetics(U, xi, gamma0)
+    grid = np.linspace(0.0, land.f_c, n, endpoint=False)
+    mom = land.moments_exact(rate)
+    return {
+        "parameters": land.to_dict(rate),
+        "force_rate_pN_per_ps": rate,
+        "f_pN": _round(grid, 4),
+        "pdf": _round(land.pdf(grid, rate), 6),
+        "cdf": _round(land.cdf(grid, rate), 6),
+        "survival": _round(land.survival(grid, rate), 6),
+        "log10_rate": _round(np.log10(np.maximum(land.rate(grid), 1e-300)), 4),
+        "mean_eq8_pN": land.mean_eq8(rate),
+        "mean_exact_pN": mom["mean"],
+        "sd_exact_pN": mom["sd"],
+        "mode_pN": land.mode(rate),
+        "residual_mass": mom["residual_mass"],
+        # the force spectrum ⟨f⟩(ḟ) for this parameter set across the paper's rates (forward, Eq. 8 and exact)
+        "spectrum": [
+            {"force_rate": r["force_rate_pN_per_ps"], "index": r["index"], "mean_eq8": land.mean_eq8(r["force_rate_pN_per_ps"]), **{f"{k}_exact": v for k, v in land.moments_exact(r["force_rate_pN_per_ps"], n=4001).items() if k in ("mean", "sd")}}
+            for r in PAPER_RATES
+        ],
+    }
+
+
+class InverseRunRequest(BaseModel):
+    config: dict[str, Any] = {}
+    run_id: str | None = None      # pass an existing id to resume it
+
+
+@app.post("/api/inverse/run")
+def inverse_run(req: InverseRunRequest) -> dict[str, Any]:
+    if _inverse.running:
+        raise HTTPException(409, "an inverse run is already in progress")
+    if req.run_id is not None and not Path(req.run_id).name == req.run_id:
+        raise HTTPException(400, "invalid run_id")
+    try:
+        cfg = InverseConfig.from_dict(req.config)
+        if cfg.source not in SOURCES:
+            raise ValueError(f"source must be one of {SOURCES}")
+        if not (1 <= cfg.bootstrap_n <= 5000 and 3 <= cfg.profile_points <= 101 and 0 <= cfg.synthetic_replicates <= 100 and 10 <= cfg.maxiter <= 100000):
+            raise ValueError("configuration outside safe limits")
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(400, f"bad configuration: {exc}") from exc
+    if req.run_id is not None:
+        # resuming: use the stored configuration if there is one
+        stored = load_run(settings, req.run_id, "config")
+        if stored:
+            cfg = InverseConfig.from_dict(stored["config"])
+    run = InverseRun(settings, cfg, run_id=req.run_id)
+    _inverse.current = run
+    return {"run_id": run.run_async()}
+
+
+@app.post("/api/inverse/cancel")
+def inverse_cancel() -> dict[str, Any]:
+    if _inverse.current is not None:
+        _inverse.current.cancel()
+    return {"cancelling": _inverse.running}
+
+
+@app.get("/api/inverse/progress")
+def inverse_progress() -> Any:
+    return _inverse.progress()
+
+
+@app.get("/api/inverse/runs")
+def inverse_runs() -> Any:
+    return list_runs(settings)
+
+
+@app.get("/api/inverse/latest")
+def inverse_latest() -> Any:
+    lr = list_runs(settings)["latest"]
+    if not lr:
+        raise HTTPException(404, "no completed inverse run yet")
+    res = load_run(settings, lr["run_id"])
+    if res is None:
+        raise HTTPException(404, "latest run has no result file")
+    return res
+
+
+@app.get("/api/inverse/runs/{run_id}")
+def inverse_run_result(run_id: str) -> Any:
+    res = load_run(settings, Path(run_id).name)
+    if res is None:
+        raise HTTPException(404, "run not found or not finished")
+    return res
+
+
+@app.get("/api/inverse/runs/{run_id}/{phase}")
+def inverse_run_phase(run_id: str, phase: str) -> Any:
+    allowed = {"config", "sample", "fit", "constrained", "hessian", "profiles", "bootstrap", "diagnostics", "sensitivity", "synthetic", "result"}
+    if phase not in allowed:
+        raise HTTPException(400, f"phase must be one of {sorted(allowed)}")
+    res = load_run(settings, Path(run_id).name, phase)
+    if res is None:
+        raise HTTPException(404, "phase file not found")
+    return res

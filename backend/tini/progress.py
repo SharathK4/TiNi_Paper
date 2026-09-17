@@ -60,11 +60,14 @@ class ProgressTracker:
         # leaves status=running on disk; on start-up that is a stale claim.
         if previous and previous.get("status") == STATUS_RUNNING:
             self.state["message"] = "Previous run was interrupted; resume to continue."
-            self.state["stage_status"] = previous.get("stage_status", self.state["stage_status"])
+            prev_ss = previous.get("stage_status", {})
+            self.state["stage_status"] = {s: prev_ss.get(s, "pending") for s in self.stages}
         elif previous:
-            for k in ("stage_status", "status", "finished_at", "elapsed_s", "message", "percent", "started_at"):
+            for k in ("status", "finished_at", "elapsed_s", "message", "percent", "started_at"):
                 if k in previous:
                     self.state[k] = previous[k]
+            prev_ss = previous.get("stage_status", {})
+            self.state["stage_status"] = {s: prev_ss.get(s, "pending") for s in self.stages}
         self._stage_started = 0.0
         self._stage_files_t0 = 0.0
         self.flush(force=True)
