@@ -10,6 +10,7 @@ never silently destroyed.
 from __future__ import annotations
 
 import json
+import math
 import os
 import tempfile
 import time
@@ -83,8 +84,34 @@ class _Encoder(json.JSONEncoder):
         return super().default(o)
 
 
+def json_safe(obj: Any) -> Any:
+    """Replace values JSON has no spelling for with null.
+
+    A quantity that was not measured is NaN in NumPy and nothing at all in
+    JSON. Writing it as the literal ``NaN`` produces a file that is not valid
+    JSON and that browsers refuse to parse, so it becomes null here and the
+    reader is free to say "not measured".
+    """
+    if isinstance(obj, float):
+        return obj if math.isfinite(obj) else None
+    if isinstance(obj, np.floating):
+        v = float(obj)
+        return v if math.isfinite(v) else None
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.bool_):
+        return bool(obj)
+    if isinstance(obj, np.ndarray):
+        return json_safe(obj.tolist())
+    if isinstance(obj, dict):
+        return {k: json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [json_safe(v) for v in obj]
+    return obj
+
+
 def atomic_write_json(target: Path, obj: Any, keep_previous: bool = True) -> None:
-    atomic_write_text(Path(target), json.dumps(obj, indent=2, cls=_Encoder, allow_nan=False), keep_previous)
+    atomic_write_text(Path(target), json.dumps(json_safe(obj), indent=2, cls=_Encoder, allow_nan=False), keep_previous)
 
 
 def atomic_write_npy(target: Path, arr: np.ndarray, keep_previous: bool = True) -> None:

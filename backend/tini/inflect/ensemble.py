@@ -20,6 +20,7 @@ from typing import Any, Callable, Iterable
 
 import numpy as np
 
+from ..io_atomic import json_safe
 from .segment import Segmentation, segment_curve
 
 MAD_TO_SIGMA = 1.4826
@@ -108,7 +109,7 @@ class EnsembleReport:
     failures: list[dict[str, str]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        return json_safe({
             "n_files": self.n_files,
             "n_ok": self.n_ok,
             "n_failed": self.n_failed,
@@ -118,7 +119,7 @@ class EnsembleReport:
             "groups": self.groups,
             "headline": self.headline,
             "failures": self.failures,
-        }
+        })
 
 
 def summarise_curve(name: str, x: np.ndarray, y: np.ndarray,

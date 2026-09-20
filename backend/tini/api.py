@@ -9,12 +9,13 @@ the cubic landscape for slider values.
 
 from __future__ import annotations
 
+import threading
 import time
 from pathlib import Path
 from typing import Any
 
 import numpy as np
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -614,3 +615,247 @@ def forward_run_phase(run_id: str, phase: str) -> Any:
     if res is None:
         raise HTTPException(404, "phase file not found")
     return res
+
+
+# =============================================================== Version 4 ==
+# Inflect: upload a table, have it read, segmented and narrated. Nothing here
+# knows about titanium nickel; the sample set is one session among any others.
+
+from .inflect.ingest import read_table as inf_read_table                     # noqa: E402
+from .inflect.sessions import (                                              # noqa: E402
+    PHASES as INF_PHASES,
+    Session,
+    SessionConfig,
+    list_sessions as inf_list_sessions,
+    open_session as inf_open_session,
+)
+
+INF_MAX_UPLOAD_BYTES = 64 * 1024 * 1024
+INF_MAX_FILES = 2000
+
+
+class _InflectService:
+    """One ensemble comparison at a time, in the background."""
+
+    def __init__(self) -> None:
+        self._thread: threading.Thread | None = None
+        self._cancel = threading.Event()
+        self.session_id: str | None = None
+        self.state: dict[str, Any] = {"status": "idle", "done": 0, "total": 0, "message": ""}
+
+    @property
+    def running(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
+
+    def start(self, session: Session, cfg: SessionConfig) -> None:
+        if self.running:
+            raise RuntimeError("a comparison is already running")
+        self._cancel.clear()
+        self.session_id = session.id
+        total = len(session.sources())
+        self.state = {"status": "running", "done": 0, "total": total, "message": "reading files"}
+        service = self
+
+        class _Tick:
+            """Just enough of a ProgressTracker for the session to report into."""
+
+            def start_stage(self, stage: str, files_total: int = 0, message: str = "") -> None:
+                service.state.update(total=files_total, done=0)
+
+            def file_done(self, n: int | None = None) -> None:
+                service.state["done"] = n if n is not None else service.state["done"] + 1
+
+        def work() -> None:
+            try:
+                session.run_ensemble(cfg, progress=_Tick(), cancel=self._cancel)
+                self.state.update(status="cancelled" if self._cancel.is_set() else "done",
+                                  message="")
+            except Exception as exc:                       # surfaced, never swallowed
+                self.state.update(status="failed", message=f"{type(exc).__name__}: {exc}")
+
+        self._thread = threading.Thread(target=work, daemon=True)
+        self._thread.start()
+
+    def cancel(self) -> None:
+        self._cancel.set()
+
+    def progress(self) -> dict[str, Any]:
+        d = dict(self.state)
+        d["running"] = self.running
+        d["session_id"] = self.session_id
+        total, done = d.get("total") or 0, d.get("done") or 0
+        d["percent"] = round(100.0 * done / total, 1) if total else 0.0
+        return d
+
+
+_inflect = _InflectService()
+
+
+def _inflect_session(session_id: str) -> Session:
+    try:
+        return inf_open_session(settings, Path(session_id).name)
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc)) from exc
+
+
+def _sample_directory() -> Path:
+    return Path(settings.data_dir).parent / "640TH_300K_comp_share"
+
+
+@app.get("/api/inflect/spec")
+def inflect_spec() -> Any:
+    return {
+        "phases": INF_PHASES,
+        "defaults": SessionConfig().to_dict(),
+        "max_upload_bytes": INF_MAX_UPLOAD_BYTES,
+        "max_files": INF_MAX_FILES,
+        "sample_available": _sample_directory().exists(),
+    }
+
+
+@app.get("/api/inflect/sessions")
+def inflect_sessions() -> Any:
+    return {"sessions": inf_list_sessions(settings)}
+
+
+@app.post("/api/inflect/sessions")
+async def inflect_create(files: list[UploadFile] = File(...), title: str = Form("")) -> Any:
+    if len(files) > INF_MAX_FILES:
+        raise HTTPException(400, f"at most {INF_MAX_FILES} files")
+    session = Session.create(settings, title=title or (files[0].filename or "Upload"))
+    total = 0
+    accepted = 0
+    problems: list[dict[str, str]] = []
+    for f in files:
+        data = await f.read()
+        total += len(data)
+        if total > INF_MAX_UPLOAD_BYTES:
+            raise HTTPException(413, "upload exceeds the size limit")
+        try:
+            inf_read_table(data, name=f.filename or "file")
+        except Exception as exc:
+            problems.append({"name": f.filename or "file", "error": str(exc)})
+            continue
+        session.add_upload(f.filename or "file", data)
+        accepted += 1
+    if not accepted:
+        raise HTTPException(400, "no readable table in the upload")
+    return {"id": session.id, "accepted": accepted, "problems": problems,
+            "session": session.meta()}
+
+
+class InflectSampleRequest(BaseModel):
+    directory: str | None = None
+    pattern: str = "*.dat"
+    title: str = "Sample: TiNi compression"
+
+
+@app.post("/api/inflect/sample")
+def inflect_sample(req: InflectSampleRequest) -> Any:
+    """Open the bundled sample set without pushing 100 MB through a form."""
+    directory = Path(req.directory) if req.directory else _sample_directory()
+    if not directory.exists():
+        raise HTTPException(404, f"no directory {directory}")
+    session = Session.create(settings, title=req.title)
+    added = session.add_directory(directory, req.pattern)
+    if not added:
+        raise HTTPException(404, f"no files matching {req.pattern} in {directory}")
+    return {"id": session.id, "accepted": len(added), "session": session.meta()}
+
+
+@app.get("/api/inflect/sessions/{session_id}")
+def inflect_session(session_id: str) -> Any:
+    s = _inflect_session(session_id)
+    meta = s.meta()
+    try:
+        table, report = s.column_report()
+    except Exception as exc:
+        raise HTTPException(400, f"could not read the first file: {exc}") from exc
+    return {
+        "session": meta,
+        "first_file": table.to_dict(),
+        "columns": report.to_dict(),
+        "files": [src.to_dict() for src in s.sources()],
+        "has_ensemble": s.ensemble_path().exists(),
+    }
+
+
+@app.post("/api/inflect/sessions/{session_id}/config")
+def inflect_set_config(session_id: str, config: dict[str, Any]) -> Any:
+    s = _inflect_session(session_id)
+    cfg = SessionConfig.from_dict({**s.config().to_dict(), **config})
+    s.set_config(cfg)
+    return {"config": cfg.to_dict()}
+
+
+@app.get("/api/inflect/sessions/{session_id}/curve")
+def inflect_curve(
+    session_id: str,
+    file: str | None = None,
+    x_column: int | None = None,
+    y_column: int | None = None,
+    n_segments: int | None = Query(None, ge=1, le=12),
+    penalty_scale: float = Query(1.0, gt=0.05, le=20.0),
+    detect_transitions: bool = True,
+    x_scale: float | None = None,
+) -> Any:
+    """Parse, segment and narrate one file. The page's main call."""
+    s = _inflect_session(session_id)
+    sources = s.sources()
+    if not sources:
+        raise HTTPException(400, "session has no files")
+    name = file or sources[0].name
+    base = s.config().to_dict()
+    for key, value in (("x_column", x_column), ("y_column", y_column),
+                       ("n_segments", n_segments), ("x_scale", x_scale)):
+        if value is not None:
+            base[key] = value
+    base["penalty_scale"] = penalty_scale
+    base["detect_transitions"] = detect_transitions
+    cfg = SessionConfig.from_dict(base)
+    try:
+        return s.curve(name, cfg)
+    except KeyError as exc:
+        raise HTTPException(404, f"no file {name} in this session") from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/api/inflect/sessions/{session_id}/columns")
+def inflect_columns(session_id: str, file: str | None = None) -> Any:
+    s = _inflect_session(session_id)
+    try:
+        table, report = s.column_report(file)
+    except Exception as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return {"file": table.to_dict(), "columns": report.to_dict()}
+
+
+@app.post("/api/inflect/sessions/{session_id}/ensemble")
+def inflect_run_ensemble(session_id: str) -> Any:
+    s = _inflect_session(session_id)
+    try:
+        _inflect.start(s, s.config())
+    except RuntimeError as exc:
+        raise HTTPException(409, str(exc)) from exc
+    return _inflect.progress()
+
+
+@app.post("/api/inflect/ensemble/cancel")
+def inflect_cancel_ensemble() -> Any:
+    _inflect.cancel()
+    return _inflect.progress()
+
+
+@app.get("/api/inflect/ensemble/progress")
+def inflect_ensemble_progress() -> Any:
+    return _inflect.progress()
+
+
+@app.get("/api/inflect/sessions/{session_id}/ensemble")
+def inflect_ensemble(session_id: str) -> Any:
+    s = _inflect_session(session_id)
+    data = s.load_ensemble()
+    if data is None:
+        raise HTTPException(404, "no comparison has been run for this session")
+    return data
