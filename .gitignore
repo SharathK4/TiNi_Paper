@@ -16,3 +16,7 @@ artifacts/forward/progress.json
 artifacts/forward/runs/*/*.prev
 artifacts/forward/runs/*/solution.npz
 artifacts/forward/errors.log
+
+# Version 4 sample dataset (107 MB) - kept out of git; extract from the shared zip
+data/raw/640TH_300K_comp_share/
+artifacts/discover/
