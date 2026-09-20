@@ -10,8 +10,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   inflect,
+  inflectLedger,
   inflectMore,
+  type Annotation,
   type Beat,
+  type Finding,
+  type Ledger as LedgerDoc,
   type ChorusResult,
   type CurveQuery,
   type CurveResult,
@@ -24,6 +28,8 @@ import {
 import { BeatRail, BeatStats, Sentence, useBeatKeys } from './Narration'
 import { Confidence } from './Confidence'
 import { Export } from './Export'
+import { Ledger } from './Ledger'
+import { Record } from './Record'
 import { Ensemble } from './Ensemble'
 import { Intake } from './Intake'
 import { Stage } from './Stage'
@@ -46,8 +52,16 @@ export function InflectPage() {
   const [uncertainty, setUncertainty] = useState<Uncertainty | null>(null)
   const [stability, setStability] = useState<Stability | null>(null)
   const [checking, setChecking] = useState(false)
+  const [ledger, setLedger] = useState<LedgerDoc | null>(null)
+  const [ledgerLoading, setLedgerLoading] = useState(false)
+  const [noteBusy, setNoteBusy] = useState(false)
+  const [inspect, setInspect] = useState<Finding | null>(null)
+  // The first ledger for a file under the settings it opened with: what a
+  // change of setting is compared against.
+  const baseline = useRef<{ file: string; ledger: LedgerDoc } | null>(null)
   const poll = useRef<number | null>(null)
   const askedFor = useRef<string>('')
+  const ledgerFor = useRef<string>('')
 
   useEffect(() => {
     inflect.spec().then((s) => setSampleAvailable(Boolean(s.sample_available))).catch(() => setSampleAvailable(false))
@@ -60,11 +74,27 @@ export function InflectPage() {
       setError(null)
       setUncertainty(null)
       setStability(null)
+      setInspect(null)
       try {
         const c = await inflect.curve(id, q)
         setCurve(c)
         setFile(c.file)
         setIndex((i) => Math.min(i, Math.max(0, c.reading.beats.length - 1)))
+        // The ledger follows: it resamples and sweeps, so it lands a second
+        // or two after the curve rather than holding the curve back.
+        const key = `${id}|${c.file}|${q.n_segments ?? 'auto'}|${q.penalty_scale ?? 1}|${q.detect_transitions ?? true}`
+        ledgerFor.current = key
+        setLedgerLoading(true)
+        inflectLedger
+          .ledger(id, { file: c.file, n_segments: q.n_segments, penalty_scale: q.penalty_scale, detect_transitions: q.detect_transitions })
+          .then((l) => {
+            if (ledgerFor.current !== key) return
+            setLedger(l)
+            const isDefault = q.n_segments === undefined && (q.penalty_scale ?? 1) === 1 && (q.detect_transitions ?? true)
+            if (isDefault || baseline.current?.file !== c.file) baseline.current = { file: c.file, ledger: l }
+          })
+          .catch(() => { if (ledgerFor.current === key) setLedger(null) })
+          .finally(() => { if (ledgerFor.current === key) setLedgerLoading(false) })
       } catch (e) {
         setError((e as Error).message)
       } finally {
@@ -146,6 +176,56 @@ export function InflectPage() {
 
   useEffect(() => () => { if (poll.current) window.clearTimeout(poll.current) }, [])
 
+  const addNote = useCallback(
+    async (f: Finding, text: string) => {
+      if (!sessionId || !curve) return
+      setNoteBusy(true)
+      try {
+        const n = await inflectLedger.addNote(sessionId, curve.file, f.id, text)
+        setLedger((l) => (l ? { ...l, notes: [...l.notes, n] } : l))
+      } finally {
+        setNoteBusy(false)
+      }
+    },
+    [sessionId, curve],
+  )
+  const removeNote = useCallback(
+    async (noteId: string) => {
+      if (!sessionId) return
+      setNoteBusy(true)
+      try {
+        await inflectLedger.removeNote(sessionId, noteId)
+        setLedger((l) => (l ? { ...l, notes: l.notes.filter((n) => n.id !== noteId) } : l))
+      } finally {
+        setNoteBusy(false)
+      }
+    },
+    [sessionId],
+  )
+
+  // What a change of setting did, finding by finding, against the baseline.
+  const delta = useMemo(() => {
+    const b = baseline.current
+    if (!ledger || !b || b.file !== ledger.file || b.ledger === ledger) return null
+    const before = new Map(b.ledger.findings.map((f) => [f.id, f]))
+    const moved: string[] = []
+    const gone: string[] = []
+    const fresh: string[] = []
+    for (const f of ledger.findings) {
+      const o = before.get(f.id)
+      if (!o) { fresh.push(f.label); continue }
+      const same = f.value === null || o.value === null
+        ? (f.text ?? '') === (o.text ?? '')
+        : Math.abs(f.value - o.value) <= 1e-9 * Math.max(1, Math.abs(o.value))
+      if (!same) moved.push(f.label)
+    }
+    for (const f of b.ledger.findings) if (!ledger.findings.some((g) => g.id === f.id)) gone.push(f.label)
+    const pos = ledger.findings.find((f) => f.id === 'transition.0.position')
+    const posBefore = before.get('transition.0.position')
+    const posHeld = pos && posBefore && pos.value !== null && posBefore.value !== null && Math.abs(pos.value - posBefore.value) < 1e-9
+    return { moved, gone, fresh, posHeld: Boolean(posHeld), n: ledger.findings.length }
+  }, [ledger])
+
   // The reading comes from the backend; the interval on it is asked for
   // separately, because resampling takes a second and the curve should be on
   // screen immediately. The beat is inserted where it belongs either way, and
@@ -209,7 +289,37 @@ export function InflectPage() {
       .finally(() => setChecking(false))
   }, [sessionId, curve, beat?.kind, controls])
 
-  const annotations = useMemo(() => beat?.annotations ?? [], [beat])
+  const annotations = useMemo<Annotation[]>(() => {
+    if (!inspect) return beat?.annotations ?? []
+    const a = inspect.anchor
+    const tone: Annotation['tone'] = inspect.tier === 'read' ? 'model' : 'accent'
+    const out: Annotation[] = []
+    if (a.x !== undefined && a.y !== undefined) out.push({ kind: 'circle', tone, x0: a.x, y0: a.y, text: inspect.label })
+    else if (a.x0 !== undefined && a.x1 !== undefined && a.y0 !== undefined && a.y1 !== undefined)
+      out.push({ kind: 'slope', tone, x0: a.x0, x1: a.x1, y0: a.y0, y1: a.y1, text: inspect.label })
+    else if (a.x0 !== undefined && a.x1 !== undefined) out.push({ kind: 'region', tone, x0: a.x0, x1: a.x1, text: inspect.label })
+    if (inspect.interval?.ci && inspect.id.endsWith('.position'))
+      out.push({ kind: 'band', tone: 'accent', x0: inspect.interval.ci[0], x1: inspect.interval.ci[1], y0: inspect.value ?? undefined, text: '95 % interval' })
+    return out
+  }, [beat, inspect])
+
+  const inspectFocus = useMemo<[number, number] | null>(() => {
+    if (!inspect || !curve) return null
+    const a = inspect.anchor
+    const span = curve.domain[1] - curve.domain[0]
+    const lo = a.x0 ?? a.x ?? curve.domain[0]
+    const hi = a.x1 ?? a.x ?? curve.domain[1]
+    const pad = Math.max((hi - lo) * 0.3, span * 0.06)
+    return [Math.max(curve.domain[0], lo - pad), Math.min(curve.domain[1], hi + pad)]
+  }, [inspect, curve])
+
+  useEffect(() => { setInspect(null) }, [index])
+
+  const notesFor = useMemo(() => {
+    if (!ledger || !beat) return []
+    const ids = new Set(beat.findings ?? [])
+    return ledger.notes.filter((n) => ids.has(n.finding_id))
+  }, [ledger, beat])
 
   if (!sessionId || !detail) {
     return (
@@ -253,16 +363,39 @@ export function InflectPage() {
             </div>
           </header>
 
+          {delta && (delta.moved.length || delta.gone.length || delta.fresh.length) ? (
+            <p className="delta">
+              Against the reading this file opened with: <b className="num">{delta.moved.length}</b> of <b className="num">{delta.n}</b> findings moved
+              {delta.gone.length ? <>, <b className="num">{delta.gone.length}</b> no longer found</> : null}
+              {delta.fresh.length ? <>, <b className="num">{delta.fresh.length}</b> new</> : null}
+              {delta.posHeld ? <>. The transition position did not move.</> : delta.moved.some((m) => m.startsWith('transition position')) ? <>. The transition position moved.</> : '.'}
+            </p>
+          ) : delta ? (
+            <p className="delta">Against the reading this file opened with: nothing moved.</p>
+          ) : null}
+
           <Stage
             curve={curve}
             annotations={annotations}
-            focus={beat.focus ?? null}
-            beatKey={`${curve.file}-${beat.id}-${index}`}
+            focus={inspectFocus ?? beat.focus ?? null}
+            beatKey={`${curve.file}-${beat.id}-${index}-${inspect?.id ?? ''}`}
           />
+          {inspect && (
+            <p className="inspecting">
+              Showing <b>{inspect.label}</b>
+              {inspect.value !== null ? <> = <span className="num">{inspect.value.toPrecision(4)}{inspect.unit ? ` ${inspect.unit}` : ''}</span></> : null}
+              <button className="btn btn--quiet btn--tiny" onClick={() => setInspect(null)}>back to the reading</button>
+            </p>
+          )}
 
           <div className="narration">
             <BeatRail beats={beats} index={index} onSelect={setIndex} />
             <h3 className="narration__title">{beat.title}</h3>
+            {beat.kind !== 'confidence' && (
+              <p className={`tierline tierline--${beat.tier ?? 'measured'}`}>
+                {beat.tier === 'read' ? 'the software\u2019s reading, by a stated rule' : 'measured by a stated procedure'}
+              </p>
+            )}
             {beat.kind === 'confidence' ? (
               <Confidence
                 uncertainty={uncertainty}
@@ -276,6 +409,14 @@ export function InflectPage() {
                 <Sentence beat={beat} onChange={onControl} />
                 <BeatStats beat={beat} />
               </>
+            )}
+            {notesFor.length > 0 && (
+              <div className="conclusions">
+                <p className="tierline tierline--concluded">your conclusion</p>
+                {notesFor.map((n) => (
+                  <blockquote key={n.id} className="conclusion conclusion--inline"><p>{n.text}</p></blockquote>
+                ))}
+              </div>
             )}
             <div className="narration__nav">
               <button className="btn btn--quiet" onClick={() => setIndex(Math.max(0, index - 1))} disabled={index === 0}>
@@ -294,6 +435,20 @@ export function InflectPage() {
         </section>
       )}
 
+      {curve && (
+        <Ledger
+          ledger={ledger}
+          loading={ledgerLoading}
+          onShow={(f) => {
+            setInspect(f)
+            document.querySelector('.stage')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }}
+          onNote={addNote}
+          onRemoveNote={removeNote}
+          busy={noteBusy}
+        />
+      )}
+
       <Ensemble
         result={ensemble}
         chorus={chorus}
@@ -306,6 +461,7 @@ export function InflectPage() {
       />
 
       <Export sessionId={sessionId} file={file} />
+      <Record sessionId={sessionId} file={file} />
 
       <Footnote />
     </>

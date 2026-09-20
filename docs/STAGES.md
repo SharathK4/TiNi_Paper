@@ -299,3 +299,26 @@ uploads. Specification and results: `docs/INFLECT.md`.
   settings agree; chorus and alignment; 296 thumbnails with the three
   outliers marked; methods paragraph 1849 characters ending with the
   flagged files. No console errors. 21 tests added, 179 pass.
+
+## Stage 6 — the ledger and the record
+* `measure`: every quantity of a reading, keyed, matched to a reference so
+  that the bootstrap and the sweep re-measure the same features. Both now
+  cover every finding, not only the transition.
+* `findings`: the ledger — tier (measured by a procedure / read by a rule),
+  method or rule in words, evidence, chart anchor, interval, sensitivity.
+  The noise carries no bootstrap interval (circular); a shifted estimator is
+  flagged, not fudged.
+* `record`: data hash, code hash, settings, seed, findings and the
+  researcher's conclusions; `verify` recomputes and compares finding by
+  finding. A tampered record is caught.
+* Notes: the researcher's conclusions, stored by finding id, exported under
+  their own heading, never among the findings.
+* Page: "Every finding" table with tier badges and filters; each row opens
+  into method, evidence, the replicates, the sweep, and a place to write a
+  conclusion; "show" draws the finding on the chart; each beat states its
+  tier and shows conclusions in the display voice; a delta line reports what
+  a change of setting moved; "Reproduce it" builds, downloads and verifies
+  the record.
+* Verified in the browser: 18 findings, note kept and shown on the beat,
+  record built and verified 18/18, delta "4 of 24 moved … the transition
+  position did not move". No console errors. 22 tests added, 201 pass.

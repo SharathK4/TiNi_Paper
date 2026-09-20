@@ -129,6 +129,8 @@ export type Beat = {
   annotations: Annotation[]
   stats: Stat[]
   focus?: [number, number]
+  tier?: 'measured' | 'read'
+  findings?: string[]
 }
 
 export type Reading = {
@@ -394,4 +396,97 @@ export const inflectMore = {
   chorus: (id: string) => get<ChorusResult>(`/sessions/${id}/chorus`),
   methods: (id: string, file?: string) => get<{ methods: string }>(`/sessions/${id}/methods`, { file }),
   csvUrl: (id: string) => `${BASE}/sessions/${id}/results.csv`,
+}
+
+// ------------------------------------------ phase 3: the ledger and the record
+export type FindingInterval = Interval & {
+  median?: number
+  shift?: number
+  biased?: boolean
+  samples?: number[]
+}
+
+export type FindingSensitivity = {
+  value: number
+  present_in: number
+  of: number
+  min: number | null
+  max: number | null
+  spread: number
+  holds: boolean
+  points: { label: string; value: number | null }[]
+}
+
+export type Finding = {
+  id: string
+  label: string
+  tier: 'measured' | 'read'
+  value: number | null
+  unit: string | null
+  method: string
+  rule: string | null
+  text: string | null
+  evidence: Record<string, unknown>
+  anchor: { x?: number; y?: number; x0?: number; x1?: number; y0?: number; y1?: number }
+  group: string
+  interval: FindingInterval | null
+  sensitivity: FindingSensitivity | null
+}
+
+export type Note = { id: string; file: string; finding_id: string; text: string; created_at_iso: string }
+
+export type Ledger = {
+  file: string
+  x_label: string
+  y_label: string
+  x_unit: string | null
+  y_unit: string | null
+  settings: Record<string, unknown>
+  findings: Finding[]
+  summary: { n: number; tiers: Record<string, number>; with_interval: number; swept: number; holds: number }
+  notes: Note[]
+  bootstrap: { n_used: number; block_length: number; detection_rate: number } | null
+  stability_sentence: string | null
+}
+
+export type RecordDoc = {
+  record_version: string
+  created_at_iso: string
+  software: { name: string; version: string; code_hash: string }
+  session: string
+  data: { file: string; sha256: string; n_rows: number; columns: Record<string, unknown> }
+  settings: Record<string, unknown>
+  seed: number
+  findings: Finding[]
+  interpretations: Note[]
+  note: string
+}
+
+export type VerifyResult = {
+  reproduced: boolean
+  n_recorded: number
+  n_same: number
+  same: string[]
+  moved: { id: string; recorded: unknown; now: unknown; difference?: number }[]
+  missing: string[]
+  new: string[]
+  data_matches: boolean
+  code_matches: boolean
+  file: string
+}
+
+export const inflectLedger = {
+  ledger: (id: string, q: CurveQuery & { with_uncertainty?: boolean; n_resamples?: number } = {}) =>
+    get<Ledger>(`/sessions/${id}/ledger`, q as Record<string, string | number | boolean | undefined>),
+  notes: (id: string, file?: string) => get<{ notes: Note[] }>(`/sessions/${id}/notes`, { file }),
+  addNote: (id: string, file: string, finding_id: string, text: string) =>
+    post<Note>(`/sessions/${id}/notes`, { file, finding_id, text }),
+  removeNote: async (id: string, noteId: string) => {
+    const r = await fetch(`${BASE}/sessions/${id}/notes/${noteId}`, { method: 'DELETE' })
+    if (!r.ok) throw new Error(await errorText(r))
+  },
+  record: (id: string, file?: string) => get<RecordDoc>(`/sessions/${id}/record`, { file }),
+  recordUrl: (id: string, file?: string) =>
+    `${BASE}/sessions/${id}/record?download=true${file ? `&file=${encodeURIComponent(file)}` : ''}`,
+  verify: (id: string, record: RecordDoc) => post<VerifyResult>(`/sessions/${id}/verify`, record),
 }

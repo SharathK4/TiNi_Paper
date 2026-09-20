@@ -1054,3 +1054,95 @@ def inflect_methods(session_id: str, file: str | None = None) -> Any:
                      f"different population ({names}).")
 
     return {"methods": text, "session": session_id}
+
+
+# --- Version 4, phase 3: the ledger, the record, and the researcher's notes
+
+class InflectNote(BaseModel):
+    file: str
+    finding_id: str
+    text: str
+
+
+@app.get("/api/inflect/sessions/{session_id}/ledger")
+def inflect_ledger(
+    session_id: str,
+    file: str | None = None,
+    n_segments: int | None = Query(None, ge=1, le=12),
+    penalty_scale: float = Query(1.0, gt=0.05, le=20.0),
+    detect_transitions: bool = True,
+    with_uncertainty: bool = True,
+    n_resamples: int = Query(INF_RESAMPLES, ge=20, le=400),
+    seed: int = 0,
+) -> Any:
+    """Every finding for one file: tier, method, evidence, interval, sensitivity."""
+    s = _inflect_session(session_id)
+    cfg = _inflect_config(s, n_segments, penalty_scale, detect_transitions)
+    name = file or (s.sources()[0].name if s.sources() else None)
+    if name is None:
+        raise HTTPException(400, "session has no files")
+    try:
+        return s.ledger(name, cfg, with_uncertainty=with_uncertainty,
+                        n_resamples=n_resamples, seed=seed)
+    except KeyError as exc:
+        raise HTTPException(404, f"no file {name} in this session") from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/api/inflect/sessions/{session_id}/notes")
+def inflect_notes(session_id: str, file: str | None = None) -> Any:
+    return {"notes": _inflect_session(session_id).notes(file)}
+
+
+@app.post("/api/inflect/sessions/{session_id}/notes")
+def inflect_add_note(session_id: str, note: InflectNote) -> Any:
+    s = _inflect_session(session_id)
+    try:
+        s.source(note.file)
+    except KeyError as exc:
+        raise HTTPException(404, f"no file {note.file} in this session") from exc
+    try:
+        return s.add_note(note.file, note.finding_id, note.text)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.delete("/api/inflect/sessions/{session_id}/notes/{note_id}")
+def inflect_remove_note(session_id: str, note_id: str) -> Any:
+    s = _inflect_session(session_id)
+    if not s.remove_note(note_id):
+        raise HTTPException(404, "no such note")
+    return {"removed": note_id}
+
+
+@app.get("/api/inflect/sessions/{session_id}/record")
+def inflect_record(session_id: str, file: str | None = None, seed: int = 0,
+                   download: bool = False) -> Any:
+    """A self-verifying record of one file's reading."""
+    s = _inflect_session(session_id)
+    name = file or (s.sources()[0].name if s.sources() else None)
+    if name is None:
+        raise HTTPException(400, "session has no files")
+    try:
+        rec = s.record(name, seed=seed)
+    except KeyError as exc:
+        raise HTTPException(404, f"no file {name} in this session") from exc
+    if download:
+        from fastapi.responses import JSONResponse
+        stem = Path(name).stem
+        return JSONResponse(rec, headers={
+            "content-disposition": f'attachment; filename="inflect-record-{stem}.json"'})
+    return rec
+
+
+@app.post("/api/inflect/sessions/{session_id}/verify")
+def inflect_verify(session_id: str, record: dict[str, Any]) -> Any:
+    """Recompute a record's findings and say which still agree."""
+    s = _inflect_session(session_id)
+    try:
+        return s.verify(record)
+    except KeyError as exc:
+        raise HTTPException(404, f"the record names a file this session does not have: {exc}") from exc
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(400, f"not a usable record: {exc}") from exc

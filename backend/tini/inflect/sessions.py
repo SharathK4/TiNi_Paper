@@ -30,6 +30,9 @@ from ..progress import ProgressTracker
 from .chorus import ChorusBuilder, sparkline
 from .columns import ColumnReport, analyse_columns
 from .ensemble import EnsembleReport, analyse_ensemble, summarise_curve
+from .findings import build_ledger, ledger_summary
+from .record import build_record, compare
+from .uncertainty import bootstrap_curve, stability_sweep
 from .ingest import Table, read_table
 from .segment import segment_curve
 from .transitions import read_curve
@@ -269,6 +272,105 @@ class Session:
             "reading": reading.to_dict(),
             "columns": [c.to_dict() for c in t.columns],
         })
+
+    # ----------------------------------------------------------------- notes
+    # The researcher's conclusions. Stored beside the findings, never among
+    # them: a note is attached to a finding by id, carries its own text and
+    # time, and is exported under its own heading.
+    def notes(self, file: str | None = None) -> list[dict[str, Any]]:
+        all_notes = self.meta().get("interpretations", [])
+        return [n for n in all_notes if file is None or n.get("file") == file]
+
+    def add_note(self, file: str, finding_id: str, text: str) -> dict[str, Any]:
+        text = text.strip()
+        if not text:
+            raise ValueError("a note needs some text")
+        d = self.meta()
+        note = {
+            "id": uuid.uuid4().hex[:10],
+            "file": file,
+            "finding_id": finding_id,
+            "text": text[:4000],
+            "created_at_iso": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        }
+        d.setdefault("interpretations", []).append(note)
+        self.write_meta(d)
+        return note
+
+    def remove_note(self, note_id: str) -> bool:
+        d = self.meta()
+        before = len(d.get("interpretations", []))
+        d["interpretations"] = [n for n in d.get("interpretations", []) if n.get("id") != note_id]
+        self.write_meta(d)
+        return len(d["interpretations"]) < before
+
+    # ---------------------------------------------------------------- ledger
+    def ledger(self, name: str, cfg: SessionConfig | None = None,
+               with_uncertainty: bool = True, n_resamples: int = 80,
+               seed: int = 0) -> dict[str, Any]:
+        """Every finding for one file, with intervals and sensitivity."""
+        cfg = cfg or self.config()
+        t = self.table(name)
+        xi, yi = self.resolve_columns(t, cfg)
+        x = t.data[:, xi] * (cfg.x_scale or 1.0)
+        y = t.data[:, yi]
+        good = np.isfinite(x) & np.isfinite(y)
+        x, y = x[good], y[good]
+        seg = segment_curve(x, y, **cfg.segment_kwargs())
+        xu, yu = cfg.x_unit or t.columns[xi].unit, cfg.y_unit or t.columns[yi].unit
+
+        unc = st = None
+        if with_uncertainty:
+            unc = bootstrap_curve(x, y, seg, n_resamples=n_resamples, seed=seed,
+                                  **cfg.segment_kwargs())
+            st = stability_sweep(x, y, seg, x_unit=xu, **cfg.segment_kwargs())
+
+        findings = build_ledger(
+            x, y, seg, t.columns[xi].name, t.columns[yi].name, xu, yu,
+            uncertainty=unc.keyed if unc else None,
+            stability=st.keyed if st else None,
+            settings=cfg.segment_kwargs(),
+        )
+        docs = [f.to_dict() for f in findings]
+        return json_safe({
+            "file": name,
+            "x_label": t.columns[xi].name, "y_label": t.columns[yi].name,
+            "x_unit": xu, "y_unit": yu,
+            "settings": {**cfg.segment_kwargs(), "seed": seed, "n_resamples": n_resamples},
+            "findings": docs,
+            "summary": ledger_summary(findings),
+            "notes": self.notes(name),
+            "bootstrap": {"n_used": unc.n_used, "block_length": unc.block_length,
+                          "detection_rate": unc.detection_rate} if unc else None,
+            "stability_sentence": st.sentence if st else None,
+        })
+
+    def record(self, name: str, cfg: SessionConfig | None = None, seed: int = 0) -> dict[str, Any]:
+        cfg = cfg or self.config()
+        led = self.ledger(name, cfg, with_uncertainty=True, seed=seed)
+        src = self.source(name)
+        t = self.table(name)
+        xi, yi = self.resolve_columns(t, cfg)
+        return build_record(
+            session_id=self.id, file=name, path=Path(src.path),
+            columns={"x": t.columns[xi].to_dict(), "y": t.columns[yi].to_dict()},
+            settings={**cfg.to_dict(), "n_resamples": led["settings"]["n_resamples"]},
+            seed=seed, findings=led["findings"], notes=self.notes(name),
+            n_rows=t.n_rows,
+        )
+
+    def verify(self, record: dict[str, Any]) -> dict[str, Any]:
+        """Recompute from a record's own settings and compare every finding."""
+        name = record["data"]["file"]
+        src = self.source(name)
+        from .record import code_hash, data_hash
+        cfg = SessionConfig.from_dict(record.get("settings", {}))
+        led = self.ledger(name, cfg, with_uncertainty=False)
+        result = compare(record.get("findings", []), led["findings"])
+        result["data_matches"] = data_hash(Path(src.path)) == record["data"].get("sha256")
+        result["code_matches"] = code_hash() == record["software"].get("code_hash")
+        result["file"] = name
+        return json_safe(result)
 
     # -------------------------------------------------------------- ensemble
     def ensemble_path(self) -> Path:

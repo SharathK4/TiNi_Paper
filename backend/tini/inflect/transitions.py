@@ -71,6 +71,11 @@ class Beat:
     annotations: list[Annotation] = field(default_factory=list)
     stats: list[dict[str, Any]] = field(default_factory=list)
     focus: list[float] | None = None  # x-range worth zooming to
+    # "measured": the sentence states numbers computed by a procedure.
+    # "read": it also asserts a classification the software made by a rule
+    # ("this is a transition", "this stretch is quadratic").
+    tier: str = "measured"
+    findings: list[str] = field(default_factory=list)   # ledger ids it draws on
 
     def to_dict(self) -> dict[str, Any]:
         d = {
@@ -78,6 +83,8 @@ class Beat:
             "kind": self.kind,
             "title": self.title,
             "sentence": self.sentence,
+            "tier": self.tier,
+            "findings": self.findings,
             "slots": [s.to_dict() for s in self.slots],
             "annotations": [a.to_dict() for a in self.annotations],
             "stats": self.stats,
@@ -212,6 +219,7 @@ def read_curve(
         id="overview",
         kind="overview",
         title="The measurement",
+        tier="measured", findings=["noise"],
         sentence=words("{n} points of {y_label} against {x_label}, with a scatter of {noise} {y_unit} about the trend."),
         slots=[
             Slot("n", float(x.size), decimals=0),
@@ -231,6 +239,7 @@ def read_curve(
         id="shape",
         kind="shape",
         title="What the curve does",
+        tier="read", findings=["shape"],
         sentence=words("Read at this level of detail, the curve has {k} regimes: {shape}.", shape=seg.shape),
         slots=[Slot("k", float(n_reg), decimals=0, control="n_segments",
                     minimum=1, maximum=8, step=1)],
@@ -285,6 +294,10 @@ def read_curve(
         beats.append(Beat(
             id=f"regime-{i}", kind="regime",
             title=f"Regime {i + 1} of {n_reg} — {s.model}",
+            tier="read",
+            findings=[f"regime.{i}.model", f"regime.{i}.extent",
+                      f"regime.{i}.level" if s.degree == 0 else f"regime.{i}.slope"]
+                     + ([f"regime.{i}.curvature"] if s.degree == 2 else []),
             sentence=words(sentence, phrase=regime_phrase(s, y_unit, x_unit)),
             slots=slots, annotations=ann, stats=stats, focus=[s.x0, s.x1],
         ))
@@ -296,6 +309,10 @@ def read_curve(
         beats.append(Beat(
             id=f"transition-{j}", kind="transition",
             title="The transition" if len(transitions) == 1 else f"Transition {j + 1}",
+            tier="read",
+            findings=[f"transition.{j}.classified", f"transition.{j}.position",
+                      f"transition.{j}.onset", f"transition.{j}.after",
+                      f"transition.{j}.step", f"transition.{j}.width"],
             sentence=words("The curve leaves its regime at {onset_x} {x_unit}, where {y_label} is "
                            "{onset_y} {y_unit}, and settles at {final_y} {y_unit} — a step of {step} "
                            "{y_unit}, {sigma} times the scatter."),
@@ -336,6 +353,8 @@ def read_curve(
             beats.append(Beat(
                 id=f"onset-vs-peak-{j}", kind="caution",
                 title="Onset, not peak",
+                tier="measured",
+                findings=["extremum.value", "extremum.position", f"transition.{j}.onset"],
                 sentence=words("The largest {y_label} reached is {peak} {y_unit} at {peak_x} {x_unit}, "
                                "which is {diff} {y_unit} away from the onset. The extremum moves "
                                "with the noise and with smoothing; the onset does not."),
@@ -364,6 +383,9 @@ def read_curve(
         beats.append(Beat(
             id=f"knee-{j}", kind="knee",
             title="A change of slope",
+            tier="read",
+            findings=[f"knee.{j}.classified", f"knee.{j}.position",
+                      f"knee.{j}.slope_before", f"knee.{j}.slope_after"],
             sentence=words("At {x} {x_unit} the curve bends without stepping: the slope goes "
                            "from {s0} to {s1} {slope_unit}."),
             slots=[

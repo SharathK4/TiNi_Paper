@@ -26,6 +26,7 @@ from typing import Any
 
 import numpy as np
 
+from .measure import measure, summarise
 from .segment import Segmentation, model_curve, prepare, segment_curve
 
 DEFAULT_RESAMPLES = 80
@@ -73,19 +74,6 @@ def moving_block_resample(r: np.ndarray, block: int, rng: np.random.Generator,
     return out[:out_len]
 
 
-def _percentile_summary(values: list[float], point: float) -> dict[str, Any]:
-    v = np.array([x for x in values if np.isfinite(x)], dtype=float)
-    if v.size < 8:
-        return {"value": point, "ci": None, "sd": None, "n": int(v.size)}
-    lo, hi = np.percentile(v, [(100 - CI) / 2, 100 - (100 - CI) / 2])
-    return {
-        "value": float(point),
-        "ci": [float(lo), float(hi)],
-        "sd": float(np.std(v, ddof=1)),
-        "n": int(v.size),
-    }
-
-
 @dataclass
 class CurveUncertainty:
     n_resamples: int
@@ -95,6 +83,7 @@ class CurveUncertainty:
     transition: dict[str, Any] | None
     segments: list[dict[str, Any]] = field(default_factory=list)
     note: str = ""
+    keyed: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -105,6 +94,7 @@ class CurveUncertainty:
             "transition": self.transition,
             "segments": self.segments,
             "note": self.note,
+            "keyed": self.keyed,
         }
 
 
@@ -156,57 +146,40 @@ def bootstrap_curve(
     block = autocorrelation_length(resid)
     rng = np.random.default_rng(seed)
 
-    main = None
-    transitions = [b for b in seg.boundaries if b.kind == "transition"]
-    if transitions:
-        main = max(transitions, key=lambda b: abs(b.gap))
-
-    mids = [0.5 * (s.x0 + s.x1) for s in seg.segments]
-    pos: list[float] = []
-    onset: list[float] = []
-    step: list[float] = []
-    slopes: list[list[float]] = [[] for _ in seg.segments]
+    reference = measure(x, y, seg)
+    series: dict[str, list[float]] = {k: [] for k in reference}
     found = 0
     used = 0
 
-    for k in range(n_resamples):
+    for _k in range(n_resamples):
         y_star = fitted + moving_block_resample(resid, block, rng, length=x.size)
         try:
             s_star = segment_curve(x, y_star, **segment_kw)
         except Exception:
             continue
         used += 1
+        got = measure(x, y_star, s_star, reference=seg)
+        if any(k.startswith("transition.") for k in got):
+            found += 1
+        for k, v in got.items():
+            if k in series:
+                series[k].append(v)
 
-        # The slope of a stretch, not of whichever piece the replicate happened
-        # to place under its midpoint: a replicate that split the stretch into
-        # a short steep piece would otherwise report that piece's slope and
-        # blow the interval open.
-        star_fit = model_curve(x, s_star)
-        for i, s in enumerate(seg.segments):
-            lo, hi = s.i0, min(s.i1, x.size)
-            if hi - lo >= 3:
-                slopes[i].append(float(np.polyfit(x[lo:hi], star_fit[lo:hi], 1)[0]))
+    keyed = {k: summarise(series[k], reference[k]) for k in reference}
 
-        t_star = [b for b in s_star.boundaries if b.kind == "transition"]
-        if not t_star:
-            continue
-        found += 1
-        if main is None:
-            continue
-        # The one nearest the original, so a second transition elsewhere in
-        # the curve cannot masquerade as movement of the one being measured.
-        near = min(t_star, key=lambda b: abs(b.x - main.x))
-        pos.append(near.x_lo)
-        onset.append(near.y_before)
-        step.append(near.gap)
-
+    # The shapes the page already reads, derived from the same replicates.
     transition = None
-    if main is not None:
+    if "transition.0.position" in reference:
         transition = {
-            "position": _percentile_summary(pos, main.x_lo),
-            "onset": _percentile_summary(onset, main.y_before),
-            "step": _percentile_summary(step, main.gap),
+            "position": keyed["transition.0.position"],
+            "onset": keyed["transition.0.onset"],
+            "step": keyed["transition.0.step"],
         }
+    segments_out = [
+        {"x0": s.x0, "x1": s.x1, "model": s.model,
+         "slope": keyed.get(f"regime.{i}.slope", summarise([], s.slope(0.5 * (s.x0 + s.x1))))}
+        for i, s in enumerate(seg.segments)
+    ]
 
     note = ""
     if block > 1:
@@ -219,14 +192,9 @@ def bootstrap_curve(
         block_length=int(block),
         detection_rate=float(found / used) if used else 0.0,
         transition=transition,
-        segments=[{"x0": s.x0, "x1": s.x1, "model": s.model,
-                   "slope": _percentile_summary(
-                       slopes[i],
-                       float(np.polyfit(x[s.i0:min(s.i1, x.size)],
-                                        fitted[s.i0:min(s.i1, x.size)], 1)[0])
-                       if min(s.i1, x.size) - s.i0 >= 3 else s.slope(mids[i]))}
-                  for i, s in enumerate(seg.segments)],
+        segments=segments_out,
         note=note,
+        keyed=keyed,
     )
 
 
@@ -241,6 +209,7 @@ class StabilityPoint:
     position: float | None
     onset: float | None
     n_segments: int
+    measured: dict[str, float] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return dict(self.__dict__)
@@ -253,6 +222,7 @@ class Stability:
     spread: float | None
     holds: bool
     sentence: str
+    keyed: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -261,6 +231,7 @@ class Stability:
             "spread": self.spread,
             "holds": self.holds,
             "sentence": self.sentence,
+            "keyed": self.keyed,
         }
 
 
@@ -304,6 +275,7 @@ def stability_sweep(
             position=float(best.x_lo) if best else None,
             onset=float(best.y_before) if best else None,
             n_segments=len(s.segments),
+            measured=measure(x, y, s, reference=reference),
         ))
 
     for t in thresholds:
@@ -339,4 +311,29 @@ def stability_sweep(
         sentence = (f"{n_found} of {n_total} settings find the transition, and they place it "
                     f"across a range of {spread:.3g}{unit} — worth reporting with the value.")
 
-    return Stability(points=points, reference=ref, spread=spread, holds=holds, sentence=sentence)
+    # Per quantity: how far it moves across the sweep, and in how many
+    # settings it exists at all. This is what the ledger shows beside each
+    # finding, so a number that is only there under one setting is never
+    # mistaken for one that is there under all of them.
+    base = measure(x, y, reference)
+    keyed: dict[str, dict[str, Any]] = {}
+    for key, ref_value in base.items():
+        vals = [p.measured[key] for p in points if key in p.measured and np.isfinite(p.measured[key])]
+        scale = max(abs(ref_value), 1e-12)
+        spread_k = float(np.max(vals) - np.min(vals)) if len(vals) > 1 else 0.0
+        keyed[key] = {
+            "value": float(ref_value),
+            "present_in": len(vals),
+            "of": len(points),
+            "min": float(np.min(vals)) if vals else None,
+            "max": float(np.max(vals)) if vals else None,
+            "spread": spread_k,
+            # Relative to the value where that means something, to the axis
+            # where the value may legitimately be zero.
+            "holds": bool(vals) and len(vals) >= 0.75 * len(points) and (
+                spread_k <= 0.05 * scale or (key.endswith(".position") and spread_k <= tolerance)),
+            "points": [{"label": p.label, "value": p.measured.get(key)} for p in points],
+        }
+
+    return Stability(points=points, reference=ref, spread=spread, holds=holds,
+                     sentence=sentence, keyed=keyed)

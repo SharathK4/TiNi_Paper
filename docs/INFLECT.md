@@ -222,7 +222,56 @@ one row per file. A methods paragraph is written from the settings actually
 used, including the sweep and the bootstrap, and ends with the set's
 statistics and any files flagged as a different population.
 
-## 12. Limitations
+## 12. The ledger: every finding, and who is responsible for it
+
+Three kinds of statement appear on the page, and a reader is entitled to
+know which is which.
+
+* **measured** — a number from a stated procedure. "The onset is at 2.148 %."
+  The software is responsible for the arithmetic and nothing more.
+* **read** — a judgement the software made by a stated rule. "This is a
+  transition." "This stretch is quadratic." The rule is given with the
+  finding, so the reader can disagree with the rule rather than with the
+  number.
+* **concluded** — what the researcher makes of it. "This is the onset of the
+  martensitic transformation." The software cannot know this, does not claim
+  it, and keeps it apart from the two tiers above wherever the findings
+  travel — a different voice on the page, its own heading in the record.
+
+Every quantity is a first-class finding with its tier, its method or rule,
+the evidence it rests on, where it sits on the chart, its bootstrap interval,
+and how far it moves across the sixteen-setting sweep. Every beat names the
+findings it draws on and carries the tier of what it asserts. The ledger is
+the thing itself; the beats are a way of walking through it.
+
+Two points of honesty in the intervals:
+
+* The noise estimate carries no bootstrap interval. The bootstrap takes it
+  as input and generates replicates from it; an interval from the same
+  bootstrap would be circular — and, because resampled residuals are whiter
+  than the originals, biased upward. The ledger says so.
+* An estimator whose replicates all sit to one side of it (a transition's
+  width on a clean step is at its resolution floor and can only widen) is
+  reported as *shifted*, with the shift, not corrected away.
+
+On the sample file: 18 findings, 12 measured and 6 read; 11 carry intervals;
+11 of the 12 swept hold across every setting. Changing the regime count from
+2 to 3 reports "4 of 24 findings moved, 1 no longer found, 7 new — the
+transition position did not move."
+
+## 13. The record
+
+A result that can be handed to someone else and checked: a hash of the data
+as read, a hash of the analysis code, every setting, the seed, the findings,
+and the researcher's conclusions under their own heading. **Verify**
+recomputes the ledger from the record's own settings and reports finding by
+finding whether the numbers still agree, and whether the data and code on
+disk are the ones the record names. A tampered record — one value moved, the
+data hash altered — is caught and named.
+
+On the sample file: reproduced, 18 of 18 findings to one part in 10⁹.
+
+## 14. Limitations
 
 * Regimes are polynomials up to degree two. An exponential or a power law is
   described as "curves over", not named. Fitting named models on a chosen
