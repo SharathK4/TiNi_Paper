@@ -226,3 +226,58 @@ CPU only.
   by line with INVERSE_PROBLEM.md §10 and FORWARD_MODEL.md §7–8; three V3
   entries updated for the longer run.
 * 88 tests, `tsc -b`, `vite build` clean.
+
+---
+
+# Version 4 — Inflect: curve analysis for any table (2026-09-20)
+
+Generalises the project from one paper's dataset to anything a researcher
+uploads. Specification and results: `docs/INFLECT.md`.
+
+## Stage 1 — the analysis core
+* `ingest` reads a numeric table without being told its dialect; `columns`
+  ranks every column for the two roles that matter, using the trend relative
+  to the noise rather than the raw range; `segment` finds transitions first
+  and then partitions the smooth stretches exactly.
+* Two findings drove the design. Thresholding the derivative cannot find a
+  transition on a quadratic background, because the ramp's own steepening
+  inflates the spread the threshold is measured against — a locally
+  detrended step statistic separates them at ten sigma instead of one. And a
+  sharp bend fakes a step in proportion to the measuring window, so the lines
+  either side are tested for where they cross.
+* 296 curves, 0 failures, transition at 2.298 +/- 0.062 % strain, 14 ms each.
+* 41 tests.
+
+## Stage 2 — reading and comparing
+* `transitions` turns a segmentation into narration beats — sentence,
+  numbers, annotations — so the interpretation is testable in Python.
+* `ensemble` compares a set: robust statistics, grouping by structure, and
+  outliers reported with the measurement that makes them one.
+* Four measurement problems found and fixed: an onset decided by a single
+  in-tolerance sample; a step measured between the two edges of a transition
+  rather than at one place; an outlier feature taken from the first fitted
+  segment; and a median absolute deviation of zero letting the outlier set
+  its own scale.
+* The outlier search returns exactly the three files an independent
+  characterisation had flagged. 29 tests.
+
+## Stage 3 — sessions and the API
+* A session is an upload plus everything derived from it, stored atomically
+  and resumable. Files are either uploaded or referenced in place, so the
+  107 MB sample set opens without going through a form.
+* Ten endpoints under `/api/inflect`. A curve is decimated for drawing by
+  keeping each bucket's extremes, so spikes survive the thinning.
+* Fixed: NaN is not valid JSON; non-finite values become null on the way out.
+* 12 tests. 158 total.
+
+## Stage 4 — the interface
+* `#inflect`: a stage rather than a dashboard. One chart holds the middle and
+  the analysis is drawn onto it beat by beat, with the camera easing to
+  whatever is being discussed.
+* No sidebar and no control panel. A setting appears as the number it already
+  is, inside the sentence that explains it, and is dragged or typed over.
+* Verified in the browser end to end: upload, the inferred-column findings,
+  every beat and its annotations, the live number re-deriving the curve, the
+  296-file comparison and its three outliers. No console errors.
+* Open: named model fitting on a chosen range; per-curve uncertainty on a
+  transition's position; export.

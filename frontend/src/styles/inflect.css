@@ -1,0 +1,867 @@
+/* Version 4 — Inflect.
+ *
+ * The page is a stage, not a dashboard: one chart holds the middle, the
+ * analysis is drawn onto it, and the only prose on screen is the sentence
+ * being read. There is no sidebar and there are no panels of controls — a
+ * setting lives inside the sentence that explains it.
+ *
+ * Same ground, ink and accent as the rest of the project; nothing new is
+ * introduced but the motion.
+ */
+
+/* ------------------------------------------------------------- masthead -- */
+.masthead--inflect {
+  padding-top: 88px;
+}
+
+.masthead--inflect .wordmark {
+  font-size: clamp(56px, 9vw, 104px);
+}
+
+/* ---------------------------------------------------------------- intake -- */
+.intake {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 72px 0 140px;
+}
+
+.drop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 340px;
+  padding: 48px 32px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(252, 252, 254, 0.7), rgba(252, 252, 254, 0.25));
+  cursor: pointer;
+  transition: border-color var(--med) var(--ease), background var(--med) var(--ease),
+    transform var(--med) var(--ease-out), box-shadow var(--med) var(--ease);
+}
+
+.drop:hover,
+.drop:focus-visible {
+  border-color: var(--accent);
+  background: linear-gradient(180deg, rgba(252, 252, 254, 0.95), rgba(252, 252, 254, 0.5));
+  outline: none;
+}
+
+.drop.is-over {
+  border-color: var(--accent);
+  border-style: solid;
+  transform: scale(1.012);
+  box-shadow: var(--lift-2);
+}
+
+.drop.is-busy {
+  cursor: progress;
+  border-color: var(--border);
+}
+
+.drop__mark {
+  width: 132px;
+  margin-bottom: 8px;
+  color: var(--ink-3);
+}
+
+.drop__curve {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.drop__curve path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 2.4s var(--ease-out) forwards;
+}
+
+.drop:hover .drop__curve,
+.drop.is-over .drop__curve {
+  color: var(--accent);
+}
+
+.drop.is-busy .drop__curve path {
+  animation: draw 1.2s var(--ease) infinite alternate;
+}
+
+.drop__title {
+  font-family: var(--display);
+  font-size: 30px;
+  letter-spacing: 0.01em;
+}
+
+.drop__hint {
+  color: var(--ink-2);
+  font-size: 13px;
+  min-height: 1.4em;
+}
+
+.drop__bar {
+  position: absolute;
+  left: 32px;
+  right: 32px;
+  bottom: 28px;
+  height: 2px;
+  background: var(--surface-sunk);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.drop__bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 160ms linear;
+}
+
+.intake__alt {
+  display: flex;
+  justify-content: center;
+  margin-top: 26px;
+}
+
+.intake__error {
+  margin-top: 22px;
+  text-align: center;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.intake__problems {
+  margin-top: 18px;
+  color: var(--warn);
+  font-size: 12.5px;
+}
+
+/* --------------------------------------------------------------- findings -- */
+.intake__eyebrow {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 30px;
+}
+
+.findings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.findings__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-soft);
+  opacity: 0;
+  transform: translateY(6px);
+  animation: rise 560ms var(--ease-out) forwards;
+}
+
+.findings__item:last-child {
+  border-bottom: none;
+}
+
+.findings__tick {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.findings__text {
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.findings__why {
+  display: block;
+  margin-top: 5px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.intake__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 44px;
+  opacity: 0;
+  animation: rise 560ms var(--ease-out) forwards;
+}
+
+/* ----------------------------------------------------------------- stage -- */
+.reading {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 0 90px;
+  transition: opacity var(--fast) var(--ease);
+}
+
+.reading.is-loading {
+  opacity: 0.55;
+}
+
+.reading__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.reading__file {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-2);
+  text-transform: none;
+}
+
+.reading__shape {
+  font-family: var(--display);
+  font-size: 22px;
+  margin-top: 4px;
+}
+
+.reading__tools {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stage {
+  position: relative;
+  margin: 26px 0 8px;
+}
+
+.stage__svg {
+  display: block;
+  overflow: visible;
+}
+
+.stage__grid line {
+  stroke: var(--border-soft);
+  stroke-width: 1;
+}
+
+.stage__axis line {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+.stage__axis text {
+  fill: var(--ink-3);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage__axis-title {
+  fill: var(--ink-2);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+}
+
+.stage__curve {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.1;
+  stroke-opacity: 0.5;
+  stroke-linejoin: round;
+  animation: draw 1200ms var(--ease-out) forwards;
+}
+
+.stage__curve--lit {
+  stroke-opacity: 1;
+  stroke-width: 1.7;
+  animation: none;
+}
+
+.stage__curve--lit.ann--model {
+  stroke: var(--model);
+}
+
+.stage__curve--lit.ann--muted {
+  stroke: var(--ink-3);
+}
+
+.stage__fit {
+  fill: none;
+  stroke: var(--model);
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  opacity: 0.92;
+}
+
+.stage__note {
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+/* ------------------------------------------------------------ annotation -- */
+.ann-layer {
+  animation: fade 420ms var(--ease-out) both;
+}
+
+.ann--region rect {
+  fill: var(--model-soft);
+}
+
+.ann--region.ann--accent rect {
+  fill: var(--accent-band);
+}
+
+.ann--region.ann--muted rect {
+  fill: rgba(150, 152, 168, 0.09);
+}
+
+.ann__tag {
+  fill: var(--ink-3);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ann--accent .ann__tag {
+  fill: var(--accent);
+}
+
+.ann--hline,
+.ann--vline line {
+  stroke: var(--model-2);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 4;
+}
+
+.ann--hline.ann--accent,
+.ann--vline.ann--accent line {
+  stroke: var(--accent);
+}
+
+.ann--circle ellipse {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 620ms var(--ease-out) forwards;
+}
+
+.ann--circle.ann--model ellipse {
+  stroke: var(--model);
+}
+
+.ann--circle.ann--muted ellipse {
+  stroke: var(--ink-3);
+  stroke-dasharray: 0.03 0.02;
+  animation: none;
+  stroke-dashoffset: 0;
+}
+
+.ann__leader {
+  stroke: var(--ink-4);
+  stroke-width: 1;
+  opacity: 0;
+  animation: fade 380ms 420ms var(--ease-out) forwards;
+}
+
+.ann__label {
+  fill: var(--ink);
+  font-size: 12.5px;
+  font-weight: 500;
+  paint-order: stroke;
+  stroke: var(--paper-bright);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  opacity: 0;
+  animation: fade 380ms 480ms var(--ease-out) forwards;
+}
+
+.ann__label--left {
+  text-anchor: start;
+}
+
+.ann__detail {
+  fill: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.ann--bracket path,
+.ann--slope path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.6;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 560ms var(--ease-out) forwards;
+}
+
+.ann--bracket.ann--model path,
+.ann--slope.ann--model path {
+  stroke: var(--model);
+}
+
+.ann--slope .ann__tri {
+  stroke-dasharray: 3 3;
+  stroke-width: 1.3;
+}
+
+/* ------------------------------------------------------------- narration -- */
+.narration {
+  max-width: 760px;
+  margin: 26px auto 0;
+  text-align: center;
+}
+
+.rail {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.rail__dot {
+  position: relative;
+  width: 26px;
+  height: 6px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: var(--border-strong);
+  cursor: pointer;
+  transition: background var(--fast) var(--ease), width var(--med) var(--ease-out);
+}
+
+.rail__dot.is-past {
+  background: var(--ink-4);
+}
+
+.rail__dot.is-on {
+  width: 46px;
+  background: var(--accent);
+}
+
+.rail__dot--transition {
+  background: var(--accent-2);
+}
+
+.rail__dot:hover .rail__label {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.rail__label {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translate(-50%, 4px);
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--fast) var(--ease), transform var(--fast) var(--ease);
+}
+
+.narration__title {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 400;
+  margin-bottom: 14px;
+}
+
+.narration__sentence {
+  font-size: 23px;
+  line-height: 1.52;
+  letter-spacing: -0.005em;
+  min-height: 3.1em;
+  animation: rise 420ms var(--ease-out) both;
+}
+
+.live {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.live--static {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.live--set {
+  color: var(--accent);
+  font-weight: 500;
+  cursor: ew-resize;
+  border-bottom: 1.5px dashed var(--accent);
+  padding: 0 1px;
+  touch-action: none;
+  user-select: none;
+  transition: background var(--fast) var(--ease);
+}
+
+.live--set:hover,
+.live--set:focus-visible {
+  background: var(--accent-soft);
+  outline: none;
+}
+
+.live__input {
+  width: auto;
+  min-width: 2.5em;
+  font-size: inherit;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: none;
+  border-bottom: 1.5px solid var(--accent);
+  padding: 0 2px;
+  text-align: center;
+}
+
+.live__input:focus {
+  outline: none;
+}
+
+.beat-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 30px;
+  margin: 30px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.beat-stats__item {
+  text-align: left;
+  padding: 6px 0;
+}
+
+.beat-stats dt {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.beat-stats dd {
+  margin: 2px 0 0;
+  font-size: 16px;
+}
+
+.beat-stats dd small {
+  color: var(--ink-2);
+  font-size: 11.5px;
+}
+
+.narration__nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 34px;
+}
+
+.narration__count {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* -------------------------------------------------------------- ensemble -- */
+.ens {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 64px 0 100px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.ens__title {
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+
+.ens__lead,
+.ens__headline {
+  color: var(--ink-1);
+  font-size: 16px;
+  max-width: 640px;
+  margin-bottom: 26px;
+}
+
+.ens__bar {
+  margin-top: 16px;
+  height: 2px;
+  background: var(--surface-sunk);
+  border-radius: 2px;
+  overflow: hidden;
+  max-width: 320px;
+}
+
+.ens__bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 200ms linear;
+}
+
+.ens__figures {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(280px, 1fr);
+  gap: 48px;
+  align-items: start;
+  margin-bottom: 44px;
+}
+
+.ens__fig figcaption {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 12px;
+}
+
+.ens__hist {
+  width: 100%;
+  height: 96px;
+}
+
+.ens__hist rect {
+  fill: var(--accent);
+  opacity: 0.72;
+}
+
+.ens__hist .ens__axis {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.ens__scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+
+.ens__stat {
+  font-family: var(--display);
+  font-size: 30px;
+  margin-top: 12px;
+}
+
+.ens__stat small {
+  font-family: var(--text);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.ens__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 20px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 13.5px;
+}
+
+.ens__row span {
+  color: var(--ink-2);
+}
+
+.ens__row b {
+  font-weight: 500;
+}
+
+.ens__row--warn b {
+  color: var(--warn);
+}
+
+.ens__outliers h3,
+.ens__files h3 {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 400;
+  margin-bottom: 16px;
+}
+
+.outlier {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  width: 100%;
+  padding: 14px 4px;
+  border: none;
+  border-bottom: 1px solid var(--border-soft);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--fast) var(--ease);
+}
+
+.outlier:hover {
+  background: var(--accent-soft);
+}
+
+.outlier__name {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  flex: none;
+}
+
+.outlier__why {
+  color: var(--ink-1);
+  font-size: 14px;
+}
+
+.ens__none {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.ens__files {
+  margin-top: 46px;
+}
+
+.ens__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  max-height: 168px;
+  overflow-y: auto;
+}
+
+.chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all var(--fast) var(--ease);
+}
+
+.chip:hover {
+  border-color: var(--ink-4);
+  color: var(--ink);
+}
+
+.chip.is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.chip.is-odd {
+  border-color: var(--accent-2);
+  color: var(--accent-2);
+}
+
+.chip.is-bad {
+  color: var(--ink-4);
+  text-decoration: line-through;
+}
+
+/* ----------------------------------------------------------------- motion -- */
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drop__curve path,
+  .stage__curve,
+  .ann--circle ellipse,
+  .ann--bracket path,
+  .ann--slope path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .findings__item,
+  .intake__actions,
+  .ann__leader,
+  .ann__label,
+  .ann-layer,
+  .narration__sentence {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .ens__figures {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+
+  .narration__sentence {
+    font-size: 19px;
+  }
+}
+
+/* With many regimes the shape line gets long; keep it from crowding the
+ * controls beside it. */
+.reading__shape {
+  max-width: 62ch;
+  line-height: 1.25;
+}

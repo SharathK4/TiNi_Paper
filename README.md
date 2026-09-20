@@ -19,6 +19,17 @@ by construction, an exact first-passage benchmark, grid/time convergence, and
 the critical-force density compared with Eq. (6) and the measured sample.
 Open `#forward`, or `python -m tini forward`. See `docs/FORWARD_MODEL.md`.
 
+**Version 4: Inflect — curve analysis for any table of numbers.** The part
+that generalises. Drop in any table and it is read back to you: the dialect
+and columns are inferred and explained, the transitions are found before the
+regimes are fitted, and each stretch of the curve is described in words with
+the numbers to hand. Across a set it reports where the transition sits, how
+much it moves, and which files do not belong — on the 296-run sample set it
+singles out exactly the three that came from a different population. The
+value reported at a transition is the one at its onset, not the largest
+reached, because the extremum is a property of the noise. Open `#inflect`.
+See `docs/INFLECT.md`.
+
 ## Layout
 
 ```
@@ -35,7 +46,8 @@ backend/tini/        FastAPI + NumPy pipeline
   api.py             the endpoints
 backend/tini/inverse/ Version 2: analytic model, likelihood, fit, uncertainty, diagnostics, runs
 backend/tini/forward/ Version 3: Smoluchowski solver, validation battery, runs
-backend/tests/       86 tests: physics identities, solver benchmarks, validation, resume, inference recovery
+backend/tini/inflect/ Version 4: dialect-agnostic ingest, column intelligence, segmentation
+backend/tests/       158 tests: physics identities, solver benchmarks, validation, resume, inference recovery, curve analysis
 frontend/            Vite + React + TypeScript, Recharts, KaTeX (light theme only)
 data/raw/Force_traces/   the 100 .dat files (3.9 MB)
 artifacts/           everything the pipeline writes (see below)

@@ -1,0 +1,174 @@
+# Version 4 — Inflect: curve analysis for any table of numbers
+
+Status: **implemented** (2026-09-20). Analysis: `backend/tini/inflect/`;
+API `/api/inflect/*`; page `#inflect`.
+
+Versions 1–3 are one paper, one dataset, one model. This version is the part
+that generalises: given any table a researcher uploads, work out what the
+columns mean, where the curve changes regime, and what each regime is worth —
+without the user writing code or choosing a parameter by hand.
+
+## 1. What it does
+
+1. **Reads the file** whatever its dialect. Comment prefix, header line,
+   separator, column names and units are inferred from the bytes and reported
+   with reasons.
+2. **Decides what to plot.** Every column is measured and ranked for two jobs:
+   the controlled variable and the response worth reading.
+3. **Finds the transitions** — the places where the curve steps.
+4. **Splits what is left into regimes** — constant, linear or quadratic —
+   by exact dynamic programming.
+5. **Says it in words**, as a sequence of narration beats with the numbers
+   in them and the annotations to draw.
+6. **Compares every file in the set**: where the transition sits, how much it
+   moves, and whether anything does not belong.
+
+## 2. Transitions before regimes
+
+The order matters, and it is the main design decision.
+
+A transition is an *event* with a finite width, not another polynomial
+regime. Letting the partitioner discover the drop spends four or five pieces
+describing the inside of one transition and reports nine regimes where a
+reader can see three. So transitions are located first and held out of the
+fitting.
+
+## 3. Finding a step on a background that is already moving
+
+The obvious detector — threshold the derivative — cannot work here. The
+sample data's energy rises quadratically, so the curve's own rate of change
+grows by a factor of forty before the transition, and the spread that a
+threshold is measured against grows with it. Measured on the sample set, the
+peak rate at the transition sits at 0.79–1.29 times the threshold: a coin
+toss.
+
+The detector used instead is a **locally detrended step statistic**. A
+straight line is fitted to the `w` points before each sample and to the `w`
+points after it; both are extrapolated to the sample and subtracted. On a
+smooth curve — however steeply it rises or curves — the two agree and the
+statistic vanishes to first order. Only a genuine discontinuity survives.
+
+On the same curves this separates at about ten sigma instead of one.
+
+Three refinements were needed to make it reliable:
+
+* **Scale.** A wide window sees a step through less noise; a narrow one tells
+  two nearby steps apart. A ladder of widths is tested and the best answer
+  kept at each sample, so both are available.
+* **Bends are not steps.** A sharp knee produces an apparent step in
+  proportion to the measuring window. The lines either side are therefore
+  tested for *where they cross*: at a bend they cross at the bend, at a
+  discontinuity they cross far away or never. This is geometric and does not
+  care how sharp the bend is.
+* **The onset must not wander.** Walking out from the event until one sample
+  agrees with the regime behind it puts the onset wherever the noise allows;
+  a run of agreeing samples is required instead.
+
+## 4. Regimes
+
+Within each smooth stretch, the optimal partition into `k` pieces is found by
+dynamic programming over candidate breakpoints. The residual sum of squares
+of a degree 0, 1 or 2 fit on any interval comes from prefix moments in O(1),
+so no greedy shortcut is needed. A budget of pieces is then shared between
+the stretches optimally.
+
+Cost is the residual sum of squares in units of the noise variance plus a
+penalty per fitted coefficient, so a straight line beats a parabola unless
+the parabola earns its coefficient. The reader may fix the number of regimes
+instead, and that is the one number the interface exposes.
+
+Two numerical points, both of which produced wrong answers before they were
+fixed:
+
+* The closed-form normal equations for a quadratic lose their significant
+  digits on a short interval far from the origin, and return a residual of
+  zero — a free segment, which the partitioner then collects. Central
+  moments about each interval's own mean fix it.
+* `y` is centred once globally: an energy column sits at −20080 and its
+  square at 4×10⁸, so the residual would otherwise be a difference of two
+  nearly equal large numbers.
+
+## 5. Onset, not peak
+
+The value reported at a transition is the response at its **onset** — the
+last state before the curve leaves its regime — not the largest value
+reached.
+
+On a noisy trace the extremum is a property of the noise, and it moves with
+however much smoothing was applied. On sample file 00005 the largest stress
+reached is −0.725 GPa at 1.84 % strain, which is a single noisy sample; the
+onset is −0.566 GPa at 2.15 %. A peak-based reading is wrong by 0.16 GPa and
+by 0.3 % strain, and would move again with a different smoothing width.
+
+The interface says so, on the chart, with both points circled.
+
+## 6. Comparing a set
+
+Each curve is reduced to the handful of numbers worth comparing: where the
+transition is, the value and size of its step, the range covered, the initial
+slope and the noise. Statistics are robust throughout — medians and median
+absolute deviations — so that the outliers being looked for do not set the
+scale they are judged against.
+
+An outlier is reported with the measurement that makes it one, in words,
+because a file that differs is either a discovery or a mistake and the reader
+can only tell which if they are told what differs.
+
+Two traps, both hit during validation:
+
+* A feature taken from the *first fitted segment* manufactured fifteen
+  outliers out of nothing, because whether the partitioner opened with a
+  plateau is a property of the description, not of the curve.
+* With near-identical repeats the median absolute deviation is zero, and
+  falling back to the standard deviation lets the outlier set the scale it is
+  judged against. A relative floor replaces it: nothing counts as unusual
+  unless it is also worth mentioning.
+
+## 7. Results on the sample set
+
+296 compression runs of titanium nickel, 21 columns, 1000 rows each.
+
+| | |
+| --- | --- |
+| columns chosen, unprompted | `-pxx` against `strain` |
+| files read | 296 of 296, no failures |
+| with a transition | 295 (stress), 279 (energy) |
+| transition at | 2.20 ± 0.11 % strain |
+| value at the transition | −0.559 ± 0.05 GPa |
+| size of the step | 0.597 ± 0.09 GPa |
+| dominant shape | run → transition → run (295 of 296) |
+| time | 14 ms per curve; 5.8 s for the set |
+
+**Outliers found: 00065, 00177, 00185** — "its range covered is 3.57 against
+a typical 0.915 — 65 spreads above the rest". These are the three files an
+independent characterisation had already flagged: each suffers an early
+relaxation event that drops it into a deeper energy minimum, after which it
+is three times stiffer and sustains five times the stress. The tool found
+them without being told to look.
+
+## 8. The interface
+
+The chart is a stage, not a dashboard. The analysis plays over it as a
+sequence of beats, each one drawing its own annotations — a shaded transition
+zone, circled onset and settled points, a bracket for the step, a slope
+triangle on a linear regime — and the camera eases to whatever the current
+beat is about.
+
+There is no sidebar and no panel of controls. A setting the reader can change
+appears as the number it already is, inside the sentence that explains what
+it does ("the curve has **4** regimes"), and is altered by dragging it or
+typing over it. A control is easiest to understand when it sits inside its
+own explanation.
+
+## 9. Limitations
+
+* Regimes are polynomials up to degree two. An exponential or a power law is
+  described as "curves over", not named. Fitting named models on a chosen
+  range is not implemented.
+* One response against one controlled variable at a time.
+* The ensemble compares files that share a column layout; a set of files with
+  different columns is read but not compared.
+* Transitions closer together than the narrowest test window are reported as
+  one. The window ladder starts at n/60 samples.
+* Uncertainty on a transition's position is not yet reported per curve; the
+  spread across a set is.

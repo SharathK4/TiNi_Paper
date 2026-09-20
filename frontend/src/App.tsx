@@ -20,16 +20,17 @@ import { SummaryPanel } from './components/SummaryPanel'
 import { TracePanel } from './components/TracePanel'
 import { InversePage } from './components/inverse/InversePage'
 import { ForwardPage } from './components/forward/ForwardPage'
+import { InflectPage } from './components/inflect/InflectPage'
 import { fixed } from './lib/format'
 import { Fdot } from './components/Math'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
-type Route = 'traces' | 'inverse' | 'forward'
+type Route = 'traces' | 'inverse' | 'forward' | 'inflect'
 
 function useRoute(): Route {
   const read = (): Route => {
     const h = window.location.hash.replace('#', '')
-    return h === 'inverse' || h === 'forward' ? h : 'traces'
+    return h === 'inverse' || h === 'forward' || h === 'inflect' ? h : 'traces'
   }
   const [route, setRoute] = useState<Route>(read)
   useEffect(() => {
@@ -41,6 +42,13 @@ function useRoute(): Route {
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
   return route
+}
+
+const ROUTE_NAMES: Record<Route, string> = {
+  traces: 'Force traces',
+  inverse: 'Inverse problem',
+  forward: 'Forward model',
+  inflect: 'Inflect',
 }
 
 export function App() {
@@ -57,11 +65,20 @@ export function App() {
         <a className={`nav__link ${route === 'forward' ? 'is-on' : ''}`} href="#forward">
           <span className="nav__index">3</span> Forward model
         </a>
+        <a className={`nav__link ${route === 'inflect' ? 'is-on' : ''}`} href="#inflect">
+          <span className="nav__index">4</span> Inflect &middot; your data
+        </a>
       </nav>
-      <ErrorBoundary name={route === 'inverse' ? 'Inverse problem' : route === 'forward' ? 'Forward model' : 'Force traces'}>
-        <ErrorBoundary name={route === 'inverse' ? 'Inverse problem' : route === 'forward' ? 'Forward model' : 'Force traces'}>
-        {route === 'inverse' ? <InversePage /> : route === 'forward' ? <ForwardPage /> : <TracesPage />}
-      </ErrorBoundary>
+      <ErrorBoundary name={ROUTE_NAMES[route]} key={route}>
+        {route === 'inverse' ? (
+          <InversePage />
+        ) : route === 'forward' ? (
+          <ForwardPage />
+        ) : route === 'inflect' ? (
+          <InflectPage />
+        ) : (
+          <TracesPage />
+        )}
       </ErrorBoundary>
     </main>
   )
