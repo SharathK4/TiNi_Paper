@@ -22,7 +22,7 @@ from pydantic import BaseModel
 
 from . import statistics as st
 from .config import FIG3_READINGS_BY_EYE, K_B_T_PN_ANGSTROM, PAPER_PARAMETER_SETS, PAPER_RATES, TEMPERATURE_K, load_settings
-from .io_atomic import read_json
+from .io_atomic import json_safe, read_json
 from .pipeline import STAGES, Pipeline
 from .potential import Landscape, potential_curves
 
@@ -859,3 +859,198 @@ def inflect_ensemble(session_id: str) -> Any:
     if data is None:
         raise HTTPException(404, "no comparison has been run for this session")
     return data
+
+
+# --- Version 4, phase 2: how sure is it, and what does the whole set look like
+
+from .inflect.uncertainty import (                                           # noqa: E402
+    DEFAULT_RESAMPLES as INF_RESAMPLES,
+    bootstrap_curve as inf_bootstrap,
+    stability_sweep as inf_stability,
+)
+from .inflect.segment import segment_curve as inf_segment                    # noqa: E402
+
+
+def _inflect_xy(s: Session, file: str | None, cfg: SessionConfig):
+    """The chosen curve of a session, with its labels."""
+    sources = s.sources()
+    if not sources:
+        raise HTTPException(400, "session has no files")
+    name = file or sources[0].name
+    try:
+        table = s.table(name)
+    except KeyError as exc:
+        raise HTTPException(404, f"no file {name} in this session") from exc
+    xi, yi = s.resolve_columns(table, cfg)
+    x = table.data[:, xi] * (cfg.x_scale or 1.0)
+    y = table.data[:, yi]
+    good = np.isfinite(x) & np.isfinite(y)
+    return name, x[good], y[good], table.columns[xi], table.columns[yi]
+
+
+def _inflect_config(s: Session, n_segments, penalty_scale, detect_transitions) -> SessionConfig:
+    base = s.config().to_dict()
+    if n_segments is not None:
+        base["n_segments"] = n_segments
+    base["penalty_scale"] = penalty_scale
+    base["detect_transitions"] = detect_transitions
+    return SessionConfig.from_dict(base)
+
+
+@app.get("/api/inflect/sessions/{session_id}/uncertainty")
+def inflect_uncertainty(
+    session_id: str,
+    file: str | None = None,
+    n_segments: int | None = Query(None, ge=1, le=12),
+    penalty_scale: float = Query(1.0, gt=0.05, le=20.0),
+    detect_transitions: bool = True,
+    n_resamples: int = Query(INF_RESAMPLES, ge=20, le=400),
+    seed: int = 0,
+) -> Any:
+    """Bootstrap the whole reading and report intervals on what it found."""
+    s = _inflect_session(session_id)
+    cfg = _inflect_config(s, n_segments, penalty_scale, detect_transitions)
+    name, x, y, xcol, ycol = _inflect_xy(s, file, cfg)
+    try:
+        seg = inf_segment(x, y, **cfg.segment_kwargs())
+        result = inf_bootstrap(x, y, seg, n_resamples=n_resamples, seed=seed,
+                               **cfg.segment_kwargs())
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return json_safe({
+        "file": name,
+        "x_unit": cfg.x_unit or xcol.unit,
+        "y_unit": cfg.y_unit or ycol.unit,
+        **result.to_dict(),
+    })
+
+
+@app.get("/api/inflect/sessions/{session_id}/stability")
+def inflect_stability(
+    session_id: str,
+    file: str | None = None,
+    n_segments: int | None = Query(None, ge=1, le=12),
+    penalty_scale: float = Query(1.0, gt=0.05, le=20.0),
+    detect_transitions: bool = True,
+) -> Any:
+    """Re-derive the transition under every setting worth trying."""
+    s = _inflect_session(session_id)
+    cfg = _inflect_config(s, n_segments, penalty_scale, detect_transitions)
+    name, x, y, xcol, ycol = _inflect_xy(s, file, cfg)
+    try:
+        seg = inf_segment(x, y, **cfg.segment_kwargs())
+        result = inf_stability(x, y, seg, x_unit=cfg.x_unit or xcol.unit,
+                               **cfg.segment_kwargs())
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return json_safe({"file": name, **result.to_dict()})
+
+
+@app.get("/api/inflect/sessions/{session_id}/chorus")
+def inflect_chorus(session_id: str) -> Any:
+    s = _inflect_session(session_id)
+    data = s.load_chorus()
+    if data is None:
+        raise HTTPException(404, "read every file first")
+    return data
+
+
+@app.get("/api/inflect/sessions/{session_id}/results.csv")
+def inflect_results_csv(session_id: str) -> Any:
+    """Every file's numbers, for a spreadsheet or a supplementary table."""
+    s = _inflect_session(session_id)
+    report = s.load_ensemble()
+    if report is None:
+        raise HTTPException(404, "read every file first")
+    cfg = s.config()
+    xu = f" [{cfg.x_unit}]" if cfg.x_unit else ""
+    yu = f" [{cfg.y_unit}]" if cfg.y_unit else ""
+    head = ["file", "ok", "shape", "regimes", f"transition{xu}", f"onset{yu}",
+            f"step{yu}", f"width{xu}", f"range{yu}", "initial slope", "noise", "error"]
+    rows = [",".join(head)]
+    for c in report.get("curves", []):
+        def cell(v: Any) -> str:
+            if v is None:
+                return ""
+            if isinstance(v, float):
+                return f"{v:.6g}"
+            text = str(v)
+            return f'"{text}"' if ("," in text or '"' in text) else text
+        rows.append(",".join(cell(c.get(k)) for k in (
+            "name", "ok", "shape", "n_regimes", "transition_x", "transition_onset",
+            "transition_step", "transition_width", "y_range", "first_slope", "noise", "error")))
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(
+        "\n".join(rows) + "\n",
+        media_type="text/csv",
+        headers={"content-disposition": f'attachment; filename="inflect-{session_id}.csv"'},
+    )
+
+
+@app.get("/api/inflect/sessions/{session_id}/methods")
+def inflect_methods(session_id: str, file: str | None = None) -> Any:
+    """A methods paragraph describing exactly what was done to this data."""
+    s = _inflect_session(session_id)
+    cfg = s.config()
+    meta = s.meta()
+    report = s.load_ensemble()
+    try:
+        table, columns = s.column_report(file)
+    except Exception as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    xi, yi = s.resolve_columns(table, cfg)
+    xname = table.columns[xi].label
+    yname = table.columns[yi].label
+    n_files = len(meta.get("sources", []))
+    d = table.dialect
+
+    regimes = ("a fixed " + str(cfg.n_segments) + " regimes"
+               if cfg.n_segments else
+               "a number of regimes chosen by a Bayesian information criterion")
+
+    text = (
+        f"Curve analysis was performed with Inflect (version 4). "
+        f"{'A single file' if n_files == 1 else f'{n_files} files'} "
+        f"({d.delimiter_name}-separated, {d.n_fields} columns, "
+        f"{table.n_rows} rows) "
+        f"{'was' if n_files == 1 else 'were'} read and {yname} was analysed "
+        f"against {xname}. "
+        f"Transitions were located before any regime was fitted, using a locally "
+        f"detrended step statistic: straight lines fitted to the samples before "
+        f"and after each point were extrapolated to it and subtracted, so that a "
+        f"smoothly varying background — however steep or curved — cancels to "
+        f"first order. The statistic was evaluated over a ladder of window "
+        f"widths and judged against its own median absolute deviation "
+        f"(threshold {cfg.event_threshold:g}). Candidates were rejected when the "
+        f"apparent step grew in proportion to the window width, or when the "
+        f"straight lines either side intersected within the candidate's own "
+        f"span, both of which indicate a change of slope rather than a "
+        f"discontinuity. "
+        f"The smooth stretches between transitions were partitioned into "
+        f"piecewise-polynomial regimes of degree at most two by exact dynamic "
+        f"programming over candidate breakpoints, with {regimes}. "
+        f"The value reported at a transition is that of the fitted regime at "
+        f"its onset rather than the extremum of the trace, which on a noisy "
+        f"measurement is a property of the noise and of the smoothing applied. "
+        f"Uncertainties are 95 % percentile intervals from a moving-block "
+        f"bootstrap of the residuals, with the block length taken from the "
+        f"residuals' autocorrelation, re-running detection and partitioning in "
+        f"full for each resample. "
+        f"Robustness was checked by re-deriving each transition across a sweep "
+        f"of detector thresholds, regime counts and penalties."
+    )
+    if report:
+        stats = report.get("stats", {})
+        tx = stats.get("transition_x", {})
+        if tx.get("n"):
+            unit = f" {cfg.x_unit}" if cfg.x_unit else ""
+            text += (f" Across the set, {tx['n']} of {report.get('n_ok', 0)} curves showed a "
+                     f"transition, at {tx['median']:.4g} ± {tx['spread']:.2g}{unit} "
+                     f"(median ± robust spread).")
+        if report.get("outliers"):
+            names = ", ".join(o["name"] for o in report["outliers"][:6])
+            text += (f" {len(report['outliers'])} file(s) were flagged as belonging to a "
+                     f"different population ({names}).")
+
+    return {"methods": text, "session": session_id}

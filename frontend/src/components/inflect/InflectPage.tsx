@@ -10,13 +10,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   inflect,
+  inflectMore,
+  type Beat,
+  type ChorusResult,
   type CurveQuery,
   type CurveResult,
   type EnsembleProgress,
   type EnsembleResult,
   type SessionDetail,
+  type Stability,
+  type Uncertainty,
 } from '../../api/inflect'
 import { BeatRail, BeatStats, Sentence, useBeatKeys } from './Narration'
+import { Confidence } from './Confidence'
+import { Export } from './Export'
 import { Ensemble } from './Ensemble'
 import { Intake } from './Intake'
 import { Stage } from './Stage'
@@ -35,7 +42,12 @@ export function InflectPage() {
   const [controls, setControls] = useState<Controls>({ penalty_scale: 1, detect_transitions: true })
   const [ensemble, setEnsemble] = useState<EnsembleResult | null>(null)
   const [ensProgress, setEnsProgress] = useState<EnsembleProgress | null>(null)
+  const [chorus, setChorus] = useState<ChorusResult | null>(null)
+  const [uncertainty, setUncertainty] = useState<Uncertainty | null>(null)
+  const [stability, setStability] = useState<Stability | null>(null)
+  const [checking, setChecking] = useState(false)
   const poll = useRef<number | null>(null)
+  const askedFor = useRef<string>('')
 
   useEffect(() => {
     inflect.spec().then((s) => setSampleAvailable(Boolean(s.sample_available))).catch(() => setSampleAvailable(false))
@@ -46,6 +58,8 @@ export function InflectPage() {
     async (id: string, q: CurveQuery) => {
       setLoading(true)
       setError(null)
+      setUncertainty(null)
+      setStability(null)
       try {
         const c = await inflect.curve(id, q)
         setCurve(c)
@@ -76,7 +90,13 @@ export function InflectPage() {
       // The session already knows whether a comparison exists; asking for one
       // that does not would answer 404 and leave an error in the console for
       // a case that is entirely ordinary.
-      setEnsemble(d.has_ensemble ? await inflect.ensemble(id).catch(() => null) : null)
+      if (d.has_ensemble) {
+        setEnsemble(await inflect.ensemble(id).catch(() => null))
+        setChorus(await inflectMore.chorus(id).catch(() => null))
+      } else {
+        setEnsemble(null)
+        setChorus(null)
+      }
     },
     [load],
   )
@@ -115,6 +135,7 @@ export function InflectPage() {
       } else if (p.status === 'done') {
         try {
           setEnsemble(await inflect.ensemble(sessionId))
+          setChorus(await inflectMore.chorus(sessionId).catch(() => null))
         } catch {
           /* the report may be missing if the run was cancelled */
         }
@@ -125,9 +146,68 @@ export function InflectPage() {
 
   useEffect(() => () => { if (poll.current) window.clearTimeout(poll.current) }, [])
 
-  const beats = curve?.reading.beats ?? []
+  // The reading comes from the backend; the interval on it is asked for
+  // separately, because resampling takes a second and the curve should be on
+  // screen immediately. The beat is inserted where it belongs either way, and
+  // fills in when the numbers arrive.
+  const beats: Beat[] = useMemo(() => {
+    const base = curve?.reading.beats ?? []
+    if (!base.length) return base
+    const t = curve?.reading.transition
+    const confidence: Beat = {
+      id: 'confidence',
+      kind: 'confidence',
+      title: 'How sure is this?',
+      sentence: '',
+      slots: [],
+      stats: [],
+      annotations:
+        t && uncertainty?.transition?.position.ci
+          ? [
+              {
+                kind: 'band',
+                tone: 'accent',
+                x0: uncertainty.transition.position.ci[0],
+                x1: uncertainty.transition.position.ci[1],
+                y0: uncertainty.transition.position.value,
+                text: '95 % interval',
+              },
+            ]
+          : [],
+      focus: t ? [Math.max(curve!.domain[0], t.x_lo - t.width * 12 - 0.05),
+                  Math.min(curve!.domain[1], t.x_hi + t.width * 12 + 0.05)] : undefined,
+    }
+    const last = base.map((b) => b.kind).lastIndexOf('transition')
+    const at = last >= 0 ? last + 1 : base.length
+    return [...base.slice(0, at), confidence, ...base.slice(at)]
+  }, [curve, uncertainty])
+
   const beat = beats[Math.min(index, beats.length - 1)]
   useBeatKeys(beats.length, index, setIndex)
+
+  // Resampling is asked for once the reader reaches the beat that needs it.
+  useEffect(() => {
+    if (!sessionId || !curve || beat?.kind !== 'confidence') return
+    const key = `${sessionId}|${curve.file}|${controls.n_segments ?? 'auto'}|${controls.penalty_scale}|${controls.detect_transitions}`
+    if (askedFor.current === key) return
+    askedFor.current = key
+    const q = {
+      file: curve.file,
+      n_segments: controls.n_segments,
+      penalty_scale: controls.penalty_scale,
+      detect_transitions: controls.detect_transitions,
+    }
+    setChecking(true)
+    Promise.all([
+      inflectMore.uncertainty(sessionId, q).catch(() => null),
+      inflectMore.stability(sessionId, q).catch(() => null),
+    ])
+      .then(([u, st]) => {
+        setUncertainty(u)
+        setStability(st)
+      })
+      .finally(() => setChecking(false))
+  }, [sessionId, curve, beat?.kind, controls])
 
   const annotations = useMemo(() => beat?.annotations ?? [], [beat])
 
@@ -183,8 +263,20 @@ export function InflectPage() {
           <div className="narration">
             <BeatRail beats={beats} index={index} onSelect={setIndex} />
             <h3 className="narration__title">{beat.title}</h3>
-            <Sentence beat={beat} onChange={onControl} />
-            <BeatStats beat={beat} />
+            {beat.kind === 'confidence' ? (
+              <Confidence
+                uncertainty={uncertainty}
+                stability={stability}
+                xUnit={curve.x_unit}
+                yUnit={curve.y_unit}
+                loading={checking}
+              />
+            ) : (
+              <>
+                <Sentence beat={beat} onChange={onControl} />
+                <BeatStats beat={beat} />
+              </>
+            )}
             <div className="narration__nav">
               <button className="btn btn--quiet" onClick={() => setIndex(Math.max(0, index - 1))} disabled={index === 0}>
                 ← back
@@ -204,6 +296,7 @@ export function InflectPage() {
 
       <Ensemble
         result={ensemble}
+        chorus={chorus}
         progress={ensProgress}
         unitX={curve?.x_unit ?? null}
         unitY={curve?.y_unit ?? null}
@@ -211,6 +304,8 @@ export function InflectPage() {
         onOpenFile={(name) => { setIndex(0); reload({ file: name }) }}
         current={file}
       />
+
+      <Export sessionId={sessionId} file={file} />
 
       <Footnote />
     </>

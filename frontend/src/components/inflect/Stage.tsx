@@ -222,6 +222,20 @@ export function Stage({
           <g key={beatKey} className="ann-layer">
             {annotations.map((a, i) => {
               const tone = `ann--${a.tone}`
+              if (a.kind === 'band' && a.x0 !== undefined && a.x1 !== undefined) {
+                const bx0 = sx(a.x0)
+                const bx1 = sx(a.x1)
+                const mid = a.y0 !== undefined ? sx(a.y0) : (bx0 + bx1) / 2
+                return (
+                  <g key={i} className={`ann ann--band ${tone}`}>
+                    <rect x={Math.min(bx0, bx1)} y={PAD.top} width={Math.max(2, Math.abs(bx1 - bx0))} height={ih} />
+                    <line x1={mid} x2={mid} y1={PAD.top} y2={PAD.top + ih} className="ann__spine" />
+                    {a.text && (
+                      <text x={mid} y={PAD.top - 6} textAnchor="middle" className="ann__tag">{a.text}</text>
+                    )}
+                  </g>
+                )
+              }
               if (a.kind === 'hline' && a.y0 !== undefined) {
                 return (
                   <line key={i} className={`ann ann--hline ${tone}`}

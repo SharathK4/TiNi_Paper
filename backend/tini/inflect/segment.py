@@ -134,6 +134,42 @@ def _runs(mask: np.ndarray) -> list[tuple[int, int]]:
     return list(zip(starts, stops))
 
 
+def prepare(x: np.ndarray, y: np.ndarray, min_points: int = MIN_SEGMENT_POINTS) -> tuple[np.ndarray, np.ndarray]:
+    """Drop the unusable points and sort by x.
+
+    Shared with the bootstrap so that a segment's indices mean the same thing
+    in both: resampling against a differently ordered array would attribute
+    every residual to the wrong place.
+    """
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    good = np.isfinite(x) & np.isfinite(y)
+    x, y = x[good], y[good]
+    if x.size < 2 * min_points:
+        raise ValueError(f"need at least {2 * min_points} finite points, got {x.size}")
+    order = np.argsort(x, kind="stable")
+    return x[order], y[order]
+
+
+def model_curve(x: np.ndarray, seg: "Segmentation") -> np.ndarray:
+    """The fitted value everywhere: the regimes, joined across the events.
+
+    Inside a transition no regime is fitted, so the two sides are joined by a
+    straight line. Residuals taken against this are what the bootstrap
+    resamples.
+    """
+    out = np.full(x.size, np.nan)
+    for s in seg.segments:
+        idx = slice(s.i0, min(s.i1, x.size))
+        out[idx] = s.evaluate(x[idx])
+    missing = ~np.isfinite(out)
+    if missing.any() and (~missing).sum() >= 2:
+        out[missing] = np.interp(x[missing], x[~missing], out[~missing])
+    elif missing.any():
+        out[missing] = float(np.nanmean(out)) if np.isfinite(out).any() else 0.0
+    return out
+
+
 def _rolling_line(x: np.ndarray, y: np.ndarray, w: int) -> tuple[np.ndarray, np.ndarray]:
     """Fit a straight line to every window of w points, by prefix sums.
 
@@ -723,15 +759,8 @@ def segment_curve(
     criterion choose. ``penalty_scale`` above 1 asks for a simpler reading of
     the curve, below 1 for a more detailed one.
     """
-    x = np.asarray(x, dtype=float)
-    y = np.asarray(y, dtype=float)
-    good = np.isfinite(x) & np.isfinite(y)
-    x, y = x[good], y[good]
+    x, y = prepare(x, y, min_points)
     n = x.size
-    if n < 2 * min_points:
-        raise ValueError(f"need at least {2 * min_points} finite points, got {n}")
-    order = np.argsort(x, kind="stable")
-    x, y = x[order], y[order]
 
     from .columns import estimate_noise
     sig = float(sigma) if sigma and sigma > 0 else estimate_noise(y)

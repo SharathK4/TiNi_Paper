@@ -281,3 +281,21 @@ uploads. Specification and results: `docs/INFLECT.md`.
   296-file comparison and its three outliers. No console errors.
 * Open: named model fitting on a chosen range; per-curve uncertainty on a
   transition's position; export.
+
+## Stage 5 — the instrument
+* `uncertainty`: moving-block bootstrap of the whole reading, and a stability
+  sweep across sixteen settings. Two wrong null models found and replaced —
+  one flattened the transition (detection fell to 49 %), one froze it (the
+  position's interval stopped responding to noise).
+* `chorus`: every curve on one axis, optionally aligned on its own
+  transition, with median and IQR; thumbnails for every file. Built in the
+  same pass as the comparison.
+* Five endpoints: uncertainty, stability, chorus, results.csv, methods.
+* Page: a "How sure is this?" beat with the interval drawn as a band, the
+  sweep as a strip and a per-regime slope table; the chorus as the hero of
+  the set view; a thumbnail grid in place of the chips; export of the figure
+  as SVG, the results as CSV, and an auto-written methods paragraph.
+* Verified in the browser: interval 2.148 % [2.10, 2.24]; all sixteen sweep
+  settings agree; chorus and alignment; 296 thumbnails with the three
+  outliers marked; methods paragraph 1849 characters ending with the
+  flagged files. No console errors. 21 tests added, 179 pass.

@@ -865,3 +865,407 @@
   max-width: 62ch;
   line-height: 1.25;
 }
+
+/* ============================================ how sure is it, and the chorus */
+
+/* --- the interval, on the chart ------------------------------------------ */
+.ann--band rect {
+  fill: var(--accent-band);
+}
+
+.ann--band.ann--model rect {
+  fill: var(--model-soft);
+}
+
+.ann__spine {
+  stroke: var(--accent);
+  stroke-width: 1.4;
+}
+
+.ann--band {
+  animation: fade 420ms var(--ease-out) both;
+}
+
+/* --- the confidence beat ------------------------------------------------- */
+.conf {
+  text-align: center;
+}
+
+.conf__waiting {
+  color: var(--ink-3);
+  font-size: 15px;
+  padding: 26px 0;
+  animation: pulse 1.6s var(--ease) infinite;
+}
+
+.conf__pills {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 44px;
+  margin-top: 30px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.conf__pill {
+  text-align: left;
+  padding: 4px 0;
+}
+
+.conf__label {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.conf__value {
+  font-size: 22px;
+  margin-top: 3px;
+}
+
+.conf__ci {
+  font-size: 11.5px;
+  color: var(--ink-2);
+  margin-top: 1px;
+}
+
+.conf__rows {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.conf__row {
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.conf__row--lead {
+  font-size: 16px;
+  color: var(--ink);
+  margin-top: 6px;
+}
+
+/* --- the sweep ----------------------------------------------------------- */
+.sweep {
+  margin: 26px auto 0;
+  max-width: 460px;
+}
+
+.sweep__svg {
+  width: 100%;
+  height: 52px;
+  overflow: visible;
+}
+
+.sweep__ref {
+  stroke: var(--border-strong);
+  stroke-width: 0.6;
+  stroke-dasharray: 2 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.sweep__dot {
+  fill: var(--model-2);
+}
+
+.sweep__dot.is-default {
+  fill: var(--accent);
+}
+
+.sweep__miss {
+  stroke: var(--ink-4);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.sweep__legend {
+  position: relative;
+  height: 14px;
+  margin-top: 2px;
+}
+
+.sweep__legend span {
+  position: absolute;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* --- the per-regime intervals -------------------------------------------- */
+.conf__table {
+  margin: 30px auto 0;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.conf__table th {
+  font-weight: 400;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 0 22px 8px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.conf__table td {
+  padding: 8px 22px 8px 0;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--ink-1);
+}
+
+.conf__table tr:last-child td {
+  border-bottom: none;
+}
+
+/* --- the chorus ---------------------------------------------------------- */
+.chorus {
+  margin: 8px 0 52px;
+}
+
+.chorus__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 10px;
+}
+
+.chorus__switch {
+  display: flex;
+  gap: 4px;
+}
+
+.chorus__switch button {
+  border: none;
+  background: none;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all var(--fast) var(--ease);
+}
+
+.chorus__switch button:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+.chorus__switch button.is-on {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.chorus__switch button:disabled {
+  color: var(--ink-4);
+  cursor: default;
+}
+
+.chorus__count {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.chorus__svg {
+  display: block;
+  overflow: visible;
+}
+
+.chorus__axis line {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+.chorus__axis text {
+  fill: var(--ink-3);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.chorus__title {
+  fill: var(--ink-2);
+  font-size: 11.5px;
+}
+
+.chorus__origin {
+  stroke: var(--ink-4);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+/* One curve is a trace; a hundred at this weight are a distribution. */
+.chorus__lines path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 0.8;
+  stroke-opacity: 0.11;
+  animation: fade 700ms var(--ease-out) both;
+}
+
+.chorus__ribbon {
+  fill: var(--model);
+  fill-opacity: 0.12;
+}
+
+.chorus__median {
+  fill: none;
+  stroke: var(--model);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  animation: draw 1100ms var(--ease-out) forwards;
+}
+
+.chorus__note {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  max-width: 64ch;
+}
+
+/* --- thumbnails ---------------------------------------------------------- */
+.sparks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+  gap: 4px;
+  max-height: 268px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.spark {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1px;
+  padding: 5px 4px 3px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  transition: all var(--fast) var(--ease);
+}
+
+.spark svg {
+  width: 100%;
+  height: 17px;
+  overflow: visible;
+}
+
+.spark path {
+  fill: none;
+  stroke: var(--ink-4);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.spark__name {
+  font-size: 9px;
+  color: var(--ink-4);
+  letter-spacing: 0.02em;
+}
+
+.spark:hover {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.spark:hover path {
+  stroke: var(--ink-2);
+}
+
+.spark.is-on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.spark.is-on path {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+.spark.is-on .spark__name {
+  color: var(--accent);
+}
+
+.spark.is-odd path {
+  stroke: var(--accent-2);
+  stroke-width: 1.4;
+}
+
+.spark.is-odd .spark__name {
+  color: var(--accent-2);
+}
+
+.spark.is-bad {
+  opacity: 0.35;
+}
+
+/* --- taking it away ------------------------------------------------------ */
+.export {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 56px 0 96px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.export h3 {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 400;
+  margin-bottom: 18px;
+}
+
+.export__row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.export__row .btn {
+  text-decoration: none;
+}
+
+.export__methods {
+  margin-top: 30px;
+  padding: 26px 30px;
+  border-left: 2px solid var(--accent);
+  background: var(--surface);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  max-width: 82ch;
+  animation: rise 420ms var(--ease-out) both;
+}
+
+.export__methods p {
+  font-size: 14px;
+  line-height: 1.72;
+  color: var(--ink-1);
+  margin-bottom: 18px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chorus__lines path,
+  .chorus__median,
+  .ann--band,
+  .conf__waiting,
+  .export__methods {
+    animation: none;
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}

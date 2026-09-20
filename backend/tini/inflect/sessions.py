@@ -27,6 +27,7 @@ import numpy as np
 from ..config import Settings
 from ..io_atomic import atomic_write_json, json_safe, read_json
 from ..progress import ProgressTracker
+from .chorus import ChorusBuilder, sparkline
 from .columns import ColumnReport, analyse_columns
 from .ensemble import EnsembleReport, analyse_ensemble, summarise_curve
 from .ingest import Table, read_table
@@ -273,6 +274,12 @@ class Session:
     def ensemble_path(self) -> Path:
         return self.root / "ensemble.json"
 
+    def chorus_path(self) -> Path:
+        return self.root / "chorus.json"
+
+    def load_chorus(self) -> dict[str, Any] | None:
+        return read_json(self.chorus_path(), default=None)
+
     def load_ensemble(self) -> dict[str, Any] | None:
         return read_json(self.ensemble_path(), default=None)
 
@@ -285,7 +292,10 @@ class Session:
             progress.start_stage("compare", files_total=len(sources))
 
         summaries = []
+        builder = ChorusBuilder()
+        thumbs: dict[str, list[float]] = {}
         xi = yi = None
+        labels = ("x", "y", None, None)
         for i, src in enumerate(sources):
             if cancel is not None and cancel.is_set():
                 break
@@ -293,11 +303,20 @@ class Session:
                 t = read_table(Path(src.path), name=src.name)
                 if xi is None:
                     xi, yi = self.resolve_columns(t, cfg)
+                    labels = (t.columns[xi].name, t.columns[yi].name,
+                              cfg.x_unit or t.columns[xi].unit,
+                              cfg.y_unit or t.columns[yi].unit)
                 x = t.data[:, xi] * (cfg.x_scale or 1.0)
                 y = t.data[:, yi]
                 good = np.isfinite(x) & np.isfinite(y)
-                summaries.append(summarise_curve(src.name, x[good], y[good],
-                                                 **cfg.segment_kwargs()))
+                x, y = x[good], y[good]
+                summary = summarise_curve(src.name, x, y, **cfg.segment_kwargs())
+                summaries.append(summary)
+                # One pass over the files serves the comparison, the chorus
+                # and the thumbnails alike; reading them three times would
+                # cost three times as much for the same numbers.
+                builder.add(src.name, x, y, summary.transition_x if summary.ok else None)
+                thumbs[src.name] = sparkline(x, y)
             except Exception as exc:
                 from .ensemble import CurveSummary
                 summaries.append(CurveSummary(name=src.name, ok=False,
@@ -306,7 +325,11 @@ class Session:
                 progress.file_done(i + 1)
 
         report = analyse_ensemble(summaries)
-        atomic_write_json(self.ensemble_path(), report.to_dict())
+        payload = report.to_dict()
+        payload["sparklines"] = thumbs
+        atomic_write_json(self.ensemble_path(), payload)
+        atomic_write_json(self.chorus_path(),
+                          builder.build(*labels).to_dict())
         return report
 
 

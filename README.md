@@ -27,8 +27,11 @@ the numbers to hand. Across a set it reports where the transition sits, how
 much it moves, and which files do not belong — on the 296-run sample set it
 singles out exactly the three that came from a different population. The
 value reported at a transition is the one at its onset, not the largest
-reached, because the extremum is a property of the noise. Open `#inflect`.
-See `docs/INFLECT.md`.
+reached, because the extremum is a property of the noise. Every number
+carries a bootstrap interval and a sixteen-setting stability sweep; every
+curve in a set can be seen at once, aligned on its own transition; and the
+figure, the results and a methods paragraph leave the page as SVG, CSV and
+text. Open `#inflect`. See `docs/INFLECT.md`.
 
 ## Layout
 
@@ -47,7 +50,7 @@ backend/tini/        FastAPI + NumPy pipeline
 backend/tini/inverse/ Version 2: analytic model, likelihood, fit, uncertainty, diagnostics, runs
 backend/tini/forward/ Version 3: Smoluchowski solver, validation battery, runs
 backend/tini/inflect/ Version 4: dialect-agnostic ingest, column intelligence, segmentation
-backend/tests/       158 tests: physics identities, solver benchmarks, validation, resume, inference recovery, curve analysis
+backend/tests/       179 tests: physics identities, solver benchmarks, validation, resume, inference recovery, curve analysis
 frontend/            Vite + React + TypeScript, Recharts, KaTeX (light theme only)
 data/raw/Force_traces/   the 100 .dat files (3.9 MB)
 artifacts/           everything the pipeline writes (see below)

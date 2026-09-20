@@ -160,7 +160,69 @@ it does ("the curve has **4** regimes"), and is altered by dragging it or
 typing over it. A control is easiest to understand when it sits inside its
 own explanation.
 
-## 9. Limitations
+## 9. How sure is it
+
+Two questions a referee asks first, answered on the page and in the numbers.
+
+**The error bar.** A moving-block bootstrap of the residuals: the fitted
+regimes are kept, the residuals are resampled in blocks whose length is read
+off their own autocorrelation, and the *entire* reading — detection and
+partitioning — is re-run on each replicate. The interval on a transition's
+position therefore includes the chance the detector would have placed it
+elsewhere, not merely the scatter of a fit whose breakpoint was held fixed.
+95 % percentile intervals are reported for the position, the value at the
+onset, the step, and the slope of every regime; the position's interval is
+drawn on the chart as a band.
+
+Two mistakes were made and corrected in building it, and both are worth
+recording because each produced an interval that looked perfectly plausible:
+
+* Joining the two sides of a transition with a straight line, and resampling
+  against that, hands every replicate a gentler transition than the one
+  measured; the detector then misses it about half the time and the interval
+  describes a curve nobody recorded.
+* Pinning the transition to the observed samples fixes that but freezes the
+  very stretch that decides where the onset is, and the interval on the
+  position came back the same width whether the step stood three hundred
+  times above the noise or four.
+
+The transition's *shape* is now kept — lightly smoothed, so its noise is not
+counted twice — and resampled noise is laid over the whole curve. Detection
+survives at 99–100 %, and the interval widens with the noise as it must.
+
+**The sweep.** The transition is re-derived under sixteen settings — six
+detector thresholds, five levels of detail, five fixed regime counts — and
+shown as a strip: a column of marks at one height is a result that belongs to
+the data, not to the knobs. On the sample set: *all sixteen settings find the
+transition and put it in the same place.*
+
+## 10. Every curve at once
+
+All curves on one pair of axes, drawn faintly enough that a hundred of them
+read as a distribution, with the median and the interquartile ribbon over
+them. The switch that matters shifts every curve so that its own transition
+sits at zero: the scatter between repeats disappears and the shape that
+every repeat shares emerges from underneath it. On the sample set the three
+outliers are visible as separate traces leaving the frame — two populations,
+seen rather than tabulated.
+
+The vertical range holds 99.2 % of the drawn values rather than all of them,
+so a handful of curves from another population cannot compress the rest into
+a fifth of the frame; those curves are named on their own further down.
+
+Every file is also shown as a thumbnail, so which ones differ is visible
+before any of them is opened.
+
+## 11. Taking it away
+
+The figure downloads as SVG — the chart on screen is already plain SVG, so
+what leaves is the thing being looked at, with the design tokens resolved
+because a stylesheet does not travel with the file. Results download as CSV,
+one row per file. A methods paragraph is written from the settings actually
+used, including the sweep and the bootstrap, and ends with the set's
+statistics and any files flagged as a different population.
+
+## 12. Limitations
 
 * Regimes are polynomials up to degree two. An exponential or a power law is
   described as "curves over", not named. Fitting named models on a chosen
@@ -170,5 +232,3 @@ own explanation.
   different columns is read but not compared.
 * Transitions closer together than the narrowest test window are reported as
   one. The window ladder starts at n/60 samples.
-* Uncertainty on a transition's position is not yet reported per curve; the
-  spread across a set is.

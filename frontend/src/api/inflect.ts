@@ -97,7 +97,7 @@ export type TableInfo = {
 }
 
 export type Annotation = {
-  kind: 'region' | 'vline' | 'hline' | 'circle' | 'bracket' | 'slope' | 'point' | 'curve'
+  kind: 'region' | 'vline' | 'hline' | 'circle' | 'bracket' | 'slope' | 'point' | 'curve' | 'band'
   tone: 'accent' | 'model' | 'muted'
   x0?: number
   x1?: number
@@ -122,7 +122,7 @@ export type Stat = { label: string; value: string | number; unit?: string | null
 
 export type Beat = {
   id: string
-  kind: 'overview' | 'shape' | 'regime' | 'transition' | 'caution' | 'knee'
+  kind: 'overview' | 'shape' | 'regime' | 'transition' | 'caution' | 'knee' | 'confidence'
   title: string
   sentence: string
   slots: Slot[]
@@ -263,6 +263,7 @@ export type EnsembleResult = {
   groups: { signature: string; count: number; members: string[] }[]
   headline: string
   failures: { name: string; error: string }[]
+  sparklines?: Record<string, number[]>
 }
 
 export type EnsembleProgress = {
@@ -325,4 +326,72 @@ export const inflect = {
       xhr.send(form)
     })
   },
+}
+
+// ---------------------------------------------- phase 2: how sure is it, and
+// ---------------------------------------------- what the whole set looks like
+export type Interval = { value: number; ci: [number, number] | null; sd: number | null; n: number }
+
+export type Uncertainty = {
+  file: string
+  x_unit: string | null
+  y_unit: string | null
+  n_resamples: number
+  n_used: number
+  block_length: number
+  detection_rate: number
+  note: string
+  transition: { position: Interval; onset: Interval; step: Interval } | null
+  segments: { x0: number; x1: number; model: string; slope: Interval }[]
+}
+
+export type StabilityPoint = {
+  setting: 'threshold' | 'penalty' | 'regimes'
+  label: string
+  value: number
+  is_default: boolean
+  found: boolean
+  position: number | null
+  onset: number | null
+  n_segments: number
+}
+
+export type Stability = {
+  file: string
+  points: StabilityPoint[]
+  reference: number | null
+  spread: number | null
+  holds: boolean
+  sentence: string
+}
+
+export type Arrangement = {
+  grid: number[]
+  median: (number | null)[]
+  low: (number | null)[]
+  high: (number | null)[]
+  lines: (number | null)[][]
+  n_curves: number
+  n_drawn: number
+  origin: string
+}
+
+export type ChorusResult = {
+  measured: Arrangement | null
+  aligned: Arrangement | null
+  names: string[]
+  x_label: string
+  y_label: string
+  x_unit: string | null
+  y_unit: string | null
+}
+
+export const inflectMore = {
+  uncertainty: (id: string, q: CurveQuery & { n_resamples?: number } = {}) =>
+    get<Uncertainty>(`/sessions/${id}/uncertainty`, q as Record<string, string | number | boolean | undefined>),
+  stability: (id: string, q: CurveQuery = {}) =>
+    get<Stability>(`/sessions/${id}/stability`, q as Record<string, string | number | boolean | undefined>),
+  chorus: (id: string) => get<ChorusResult>(`/sessions/${id}/chorus`),
+  methods: (id: string, file?: string) => get<{ methods: string }>(`/sessions/${id}/methods`, { file }),
+  csvUrl: (id: string) => `${BASE}/sessions/${id}/results.csv`,
 }

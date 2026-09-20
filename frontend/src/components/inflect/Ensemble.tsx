@@ -8,7 +8,9 @@
  */
 
 import { useMemo } from 'react'
-import type { EnsembleProgress, EnsembleResult } from '../../api/inflect'
+import type { ChorusResult, EnsembleProgress, EnsembleResult } from '../../api/inflect'
+import { Chorus } from './Chorus'
+import { SparkGrid } from './Export'
 
 function histogram(values: number[], bins = 28) {
   const v = values.filter((n) => isFinite(n))
@@ -31,6 +33,7 @@ function fmt(v: number | null | undefined, digits = 4): string {
 
 export function Ensemble({
   result,
+  chorus,
   progress,
   unitX,
   unitY,
@@ -39,6 +42,7 @@ export function Ensemble({
   current,
 }: {
   result: EnsembleResult | null
+  chorus: ChorusResult | null
   progress: EnsembleProgress | null
   unitX: string | null
   unitY: string | null
@@ -80,6 +84,8 @@ export function Ensemble({
     <section className="ens">
       <h2 className="ens__title">Every file</h2>
       <p className="ens__headline">{result.headline}</p>
+
+      {chorus && <Chorus data={chorus} />}
 
       <div className="ens__figures">
         <figure className="ens__fig">
@@ -153,18 +159,14 @@ export function Ensemble({
 
       <div className="ens__files">
         <h3>Open a file</h3>
-        <div className="ens__chips">
-          {result.curves.slice(0, 400).map((c) => (
-            <button
-              key={c.name}
-              className={`chip ${c.name === current ? 'is-on' : ''} ${outlierNames.has(c.name) ? 'is-odd' : ''} ${c.ok ? '' : 'is-bad'}`}
-              onClick={() => onOpenFile(c.name)}
-              title={c.ok ? `${c.shape}${c.transition_x !== null ? ` · at ${fmt(c.transition_x)}` : ''}` : (c.error ?? 'unreadable')}
-            >
-              {c.name.replace(/\.[^.]+$/, '').slice(-6)}
-            </button>
-          ))}
-        </div>
+        <SparkGrid
+          sparklines={result.sparklines ?? {}}
+          names={result.curves.slice(0, 400).map((c) => c.name)}
+          current={current}
+          odd={outlierNames}
+          bad={new Set(result.curves.filter((c) => !c.ok).map((c) => c.name))}
+          onOpen={onOpenFile}
+        />
       </div>
     </section>
   )
