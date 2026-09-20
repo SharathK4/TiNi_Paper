@@ -292,14 +292,32 @@ def detect_events(
         right_model = lambda t: ic_r[0] + sl_r[0] * t  # noqa: E731
 
         # The transition occupies the stretch where the curve has left the
-        # regime behind it and not yet joined the one ahead.
+        # regime behind it and not yet joined the one ahead. A single sample
+        # that happens to land back on the old trend does not mean the curve
+        # has rejoined it, so a run of agreeing samples is required — without
+        # that, the reported onset wanders with the noise from repeat to
+        # repeat, which is exactly the instability this tool exists to avoid.
         tol = 3.0 * sigma if sigma > 0 else 3.0 * spread
-        i0 = centre
-        while i0 > max(0, centre - 3 * w) and abs(y[i0] - left_model(x[i0])) > tol:
-            i0 -= 1
-        i1 = centre
-        while i1 < min(n - 1, centre + 3 * w) and abs(y[i1] - right_model(x[i1])) > tol:
-            i1 += 1
+        need = max(3, w // 4)
+
+        def settle(start: int, stop: int, model) -> int:
+            direction = 1 if stop > start else -1
+            run = 0
+            k = start
+            while k != stop:
+                if abs(y[k] - model(x[k])) <= tol:
+                    run += 1
+                    if run >= need:
+                        # The run was walked through backwards; the edge of the
+                        # transition is at the end of it nearest the centre.
+                        return k - direction * (need - 1)
+                else:
+                    run = 0
+                k += direction
+            return stop
+
+        i0 = settle(centre, max(0, centre - 3 * w), left_model)
+        i1 = settle(centre, min(n - 1, centre + 3 * w), right_model)
         if i1 <= i0:
             i0, i1 = max(0, centre - 1), min(n - 1, centre + 1)
 
@@ -318,7 +336,12 @@ def detect_events(
 
         y_before = float(left_model(x[i0]))
         y_after = float(right_model(x[i1]))
-        drop = y_after - y_before
+        # The size of the step is the disagreement between the two regimes at
+        # one place, not the difference between the levels at the two edges:
+        # on a background that is itself climbing, the latter would count the
+        # background's own rise across the transition as part of the step.
+        x_mid = 0.5 * (x[i0] + x[i1])
+        drop = float(right_model(x_mid) - left_model(x_mid))
         drop_sigma = abs(drop) / sigma if sigma > 0 else float("inf")
         if drop_sigma < min_drop_sigma:
             continue
