@@ -10,12 +10,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   inflect,
+  inflectColumns,
   inflectLedger,
   inflectMore,
   type Annotation,
   type Beat,
   type Finding,
   type Ledger as LedgerDoc,
+  type Preview,
   type ChorusResult,
   type CurveQuery,
   type CurveResult,
@@ -28,6 +30,7 @@ import {
 import { BeatRail, BeatStats, Sentence, useBeatKeys } from './Narration'
 import { Confidence } from './Confidence'
 import { Export } from './Export'
+import { Columns } from './Columns'
 import { Ledger } from './Ledger'
 import { Record } from './Record'
 import { Ensemble } from './Ensemble'
@@ -56,6 +59,9 @@ export function InflectPage() {
   const [ledgerLoading, setLedgerLoading] = useState(false)
   const [noteBusy, setNoteBusy] = useState(false)
   const [inspect, setInspect] = useState<Finding | null>(null)
+  // Choosing the columns sits between reading the file and reading the curve.
+  const [preview, setPreview] = useState<Preview | null>(null)
+  const [choosing, setChoosing] = useState(false)
   // The first ledger for a file under the settings it opened with: what a
   // change of setting is compared against.
   const baseline = useRef<{ file: string; ledger: LedgerDoc } | null>(null)
@@ -109,6 +115,9 @@ export function InflectPage() {
       setSessionId(id)
       setDetail(d)
       setIndex(0)
+      setCurve(null)
+      setLedger(null)
+      setError(null)
       // A strain column in absolute units reads better as a percentage, and
       // the units are worth carrying into every sentence.
       const cols = d.columns
@@ -116,10 +125,17 @@ export function InflectPage() {
       if (x && x.kind === 'strain' && !x.unit && Math.abs(x.maximum) <= 1.5) {
         await inflect.setConfig(id, { x_scale: 100, x_unit: '%' })
       }
-      await load(id, {})
-      // The session already knows whether a comparison exists; asking for one
-      // that does not would answer 404 and leave an error in the console for
-      // a case that is entirely ordinary.
+      // Stop here and let the reader choose what to plot. The tool's own pick
+      // is pre-selected; it is a suggestion, not a decision taken for them.
+      setChoosing(true)
+      try {
+        setPreview(await inflectColumns.preview(id))
+      } catch (e) {
+        // No preview is no reason to be stuck: fall through to the tool's pick.
+        setPreview(null)
+        setChoosing(false)
+        await load(id, {})
+      }
       if (d.has_ensemble) {
         setEnsemble(await inflect.ensemble(id).catch(() => null))
         setChorus(await inflectMore.chorus(id).catch(() => null))
@@ -130,6 +146,46 @@ export function InflectPage() {
     },
     [load],
   )
+
+  /** The reader has picked a pair: remember it and read the curve. */
+  const chooseColumns = useCallback(
+    async (xi: number, yi: number) => {
+      if (!sessionId) return
+      setLoading(true)
+      try {
+        // Units belong to the column, so a pick that changes the column
+        // clears a unit that was set for a different one.
+        const picked = preview?.columns.find((c) => c.index === yi)
+        await inflect.setConfig(sessionId, {
+          x_column: xi,
+          y_column: yi,
+          y_unit: picked?.unit ?? null,
+        })
+        setChoosing(false)
+        setIndex(0)
+        await load(sessionId, { x_column: xi, y_column: yi })
+      } finally {
+        setLoading(false)
+      }
+    },
+    [sessionId, preview, load],
+  )
+
+  /** Go back to the chooser from the reading. */
+  const changeColumns = useCallback(async () => {
+    if (!sessionId) return
+    // Cleared first: the chooser reads the current pair when it mounts, and
+    // mounting it against the previous answer would show the suggestion
+    // again rather than what the reader chose last time.
+    setPreview(null)
+    setChoosing(true)
+    try {
+      setPreview(await inflectColumns.preview(sessionId, file ?? undefined))
+    } catch (e) {
+      setError((e as Error).message)
+      setChoosing(false)
+    }
+  }, [sessionId, file])
 
   const reload = useCallback(
     (next: Partial<Controls> & { file?: string }) => {
@@ -331,6 +387,27 @@ export function InflectPage() {
     )
   }
 
+  if (choosing) {
+    return (
+      <>
+        <Masthead />
+        {error && <p className="intake__error">{error}</p>}
+        {preview ? (
+          <Columns
+            key={`${preview.file}:${preview.chosen_x}:${preview.chosen_y}`}
+            preview={preview}
+            busy={loading}
+            onConfirm={chooseColumns}
+            onBack={curve ? () => setChoosing(false) : () => { setSessionId(null); setDetail(null); setPreview(null); setChoosing(false) }}
+          />
+        ) : (
+          <section className="choose"><p className="conf__waiting">Looking at every column…</p></section>
+        )}
+        <Footnote />
+      </>
+    )
+  }
+
   return (
     <>
       <Masthead headline={curve?.reading.headline} />
@@ -342,7 +419,15 @@ export function InflectPage() {
           <header className="reading__head">
             <div>
               <h2 className="reading__file">{curve.file}</h2>
-              <p className="reading__shape">{curve.segmentation.shape.replace(/->/g, '→')}</p>
+              <p className="reading__shape" title={curve.segmentation.shape.replace(/->/g, '→')}>
+                {(() => {
+                  const parts = curve.segmentation.shape.split(' -> ')
+                  if (parts.length <= 9) return curve.segmentation.shape.replace(/->/g, '→')
+                  const n = curve.segmentation.n_segments
+                  const t = curve.segmentation.boundaries.filter((b) => b.kind === 'transition').length
+                  return `${parts[0]} → … → ${parts[parts.length - 1]} · ${n} regimes, ${t} transition${t === 1 ? '' : 's'}`
+                })()}
+              </p>
             </div>
             <div className="reading__tools">
               <button
@@ -357,7 +442,10 @@ export function InflectPage() {
                   let it choose
                 </button>
               )}
-              <button className="btn btn--quiet" onClick={() => { setSessionId(null); setCurve(null); setEnsemble(null) }}>
+              <button className="btn btn--quiet" onClick={changeColumns}>
+                change columns
+              </button>
+              <button className="btn btn--quiet" onClick={() => { setSessionId(null); setCurve(null); setEnsemble(null); setPreview(null) }}>
                 new data
               </button>
             </div>

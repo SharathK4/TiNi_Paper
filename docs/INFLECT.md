@@ -33,6 +33,23 @@ describing the inside of one transition and reports nine regimes where a
 reader can see three. So transitions are located first and held out of the
 fitting.
 
+## 2b. The suggestion is not the decision
+
+Ranking the columns is a default, not a monopoly. A twenty-one column
+simulation log holds many pairs a reader might legitimately want, and the
+tool cannot know which question is being asked — stress against strain,
+energy against strain, or a transverse box length against time.
+
+So after a file is read, every column is offered. Each is listed with its own
+shape drawn beside it, its range, and the reason it was ranked where it was;
+the tool's own pick is first and marked, and the pair currently selected is
+drawn large. The drawing is instant because every column arrives thinned on
+the *same* row indices, so any column can be plotted against any other
+without another request — 21 columns of 140 points is 41 KB.
+
+A chosen pair is stored with the session and is what the reader returns to,
+not the suggestion. Choosing again from the reading is one button.
+
 ## 3. Finding a step on a background that is already moving
 
 The obvious detector — threshold the derivative — cannot work here. The

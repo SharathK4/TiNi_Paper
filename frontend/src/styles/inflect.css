@@ -1714,3 +1714,245 @@
     padding-left: 0;
   }
 }
+
+/* =========================================== choosing what to plot, by hand */
+.choose {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 44px 0 120px;
+}
+
+.choose__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.choose__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.choose__file {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.choose__sentence {
+  font-size: 27px;
+  line-height: 1.5;
+  margin-top: 30px;
+  color: var(--ink);
+}
+
+.choose__sentence b {
+  font-weight: 500;
+  color: var(--accent);
+  border-bottom: 1.5px solid var(--accent-soft);
+}
+
+.choose__hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+/* --- the pair, drawn large ------------------------------------------------ */
+.choose__pair {
+  margin: 26px 0 40px;
+}
+
+.pair__svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.pair__axis {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+.pair__line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  animation: fade 520ms var(--ease-out) both;
+}
+
+.pair__tick {
+  fill: var(--ink-3);
+  font-size: 13px;
+  font-family: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.pair__label {
+  fill: var(--ink-2);
+  font-size: 14px;
+  font-family: var(--text);
+}
+
+.pair__empty {
+  padding: 60px 0;
+  text-align: center;
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+/* --- the two lists -------------------------------------------------------- */
+.choose__lists {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 44px;
+}
+
+.choose__col h3 {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 400;
+  margin-bottom: 14px;
+}
+
+.colopt {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-bottom: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--fast) var(--ease), border-color var(--fast) var(--ease);
+}
+
+.colopt:hover {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.colopt.is-on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.colopt.is-flat {
+  opacity: 0.5;
+}
+
+.colthumb {
+  flex: none;
+  width: 56px;
+  height: 18px;
+  overflow: visible;
+}
+
+.colthumb path {
+  fill: none;
+  stroke: var(--ink-4);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.colopt:hover .colthumb path {
+  stroke: var(--ink-2);
+}
+
+.colopt.is-on .colthumb path {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+.colopt__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.colopt__name {
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.colopt.is-on .colopt__name {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.colopt__unit {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.colopt__tag {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sage);
+  border: 1px solid var(--sage);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.colopt__dup {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.colopt__why {
+  font-size: 12px;
+  color: var(--ink-2);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.colopt__range {
+  flex: none;
+  font-size: 11.5px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.choose__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 40px;
+  padding-top: 26px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.choose__warn {
+  font-size: 13px;
+  color: var(--accent);
+}
+
+@media (max-width: 900px) {
+  .choose__lists {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+}

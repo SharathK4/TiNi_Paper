@@ -821,6 +821,19 @@ def inflect_curve(
         raise HTTPException(400, str(exc)) from exc
 
 
+@app.get("/api/inflect/sessions/{session_id}/preview")
+def inflect_preview(session_id: str, file: str | None = None,
+                    points: int = Query(140, ge=20, le=600)) -> Any:
+    """Every column thinned on shared row indices, so the reader can choose."""
+    s = _inflect_session(session_id)
+    try:
+        return s.preview(file, points=points)
+    except KeyError as exc:
+        raise HTTPException(404, f"no file {file} in this session") from exc
+    except (ValueError, IndexError) as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
 @app.get("/api/inflect/sessions/{session_id}/columns")
 def inflect_columns(session_id: str, file: str | None = None) -> Any:
     s = _inflect_session(session_id)

@@ -322,3 +322,19 @@ uploads. Specification and results: `docs/INFLECT.md`.
 * Verified in the browser: 18 findings, note kept and shown on the beat,
   record built and verified 18/18, delta "4 of 24 moved … the transition
   position did not move". No console errors. 22 tests added, 201 pass.
+
+## Stage 7 — choosing what to plot
+* `/preview` returns every column thinned on shared row indices, with its
+  statistics, its ranking reasons and the stored choice, so the page can draw
+  any pair against any other with no further request (41 KB for 21 columns).
+* A chooser sits between reading the file and reading the curve: each column
+  with its own shape, range and reason; the tool's pick first and marked;
+  the selected pair drawn large and updating as it is clicked; swap, show-all
+  and a route back from the reading.
+* The chosen pair is stored on the session, so returning to the chooser shows
+  what the reader chose rather than the suggestion again.
+* Two bugs found in the browser and fixed: the chooser mounted against the
+  previous preview and so forgot the reader's pick, and a very smooth column
+  can honestly earn twenty regimes, whose shape line ran to forty words and
+  is now summarised.
+* 9 tests added, 210 pass.

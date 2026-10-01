@@ -33,7 +33,9 @@ curve in a set can be seen at once, aligned on its own transition; and the
 figure, the results and a methods paragraph leave the page as SVG, CSV and
 text. Every finding is a first-class object with its tier — measured by a
 stated procedure, read by a stated rule, or concluded by the researcher —
-its method, evidence, interval and sensitivity; and a self-verifying record
+its method, evidence, interval and sensitivity; the columns to plot are
+suggested but chosen by the reader, every one shown with its own shape; and a
+self-verifying record
 names the data and code by hash and recomputes the findings on demand. Open
 `#inflect`. See `docs/INFLECT.md`.
 
@@ -54,7 +56,7 @@ backend/tini/        FastAPI + NumPy pipeline
 backend/tini/inverse/ Version 2: analytic model, likelihood, fit, uncertainty, diagnostics, runs
 backend/tini/forward/ Version 3: Smoluchowski solver, validation battery, runs
 backend/tini/inflect/ Version 4: dialect-agnostic ingest, column intelligence, segmentation
-backend/tests/       201 tests: physics identities, solver benchmarks, validation, resume, inference recovery, curve analysis
+backend/tests/       210 tests: physics identities, solver benchmarks, validation, resume, inference recovery, curve analysis
 frontend/            Vite + React + TypeScript, Recharts, KaTeX (light theme only)
 data/raw/Force_traces/   the 100 .dat files (3.9 MB)
 artifacts/           everything the pipeline writes (see below)

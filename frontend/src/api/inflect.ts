@@ -490,3 +490,47 @@ export const inflectLedger = {
     `${BASE}/sessions/${id}/record?download=true${file ? `&file=${encodeURIComponent(file)}` : ''}`,
   verify: (id: string, record: RecordDoc) => post<VerifyResult>(`/sessions/${id}/verify`, record),
 }
+
+// --------------------------------------------- choosing what to plot, by hand
+export type PreviewColumn = {
+  index: number
+  name: string
+  unit: string | null
+  label: string
+  kind: string
+  kind_reason: string
+  values: (number | null)[]
+  minimum: number
+  maximum: number
+  monotonic: string
+  uniform_spacing: boolean
+  noise_sigma: number
+  trend_strength: number
+  constant: boolean
+  duplicate_of: string | null
+  x_score: number
+  y_score: number
+  x_reasons: string[]
+  y_reasons: string[]
+}
+
+export type Preview = {
+  file: string
+  n_rows: number
+  n_preview: number
+  columns: PreviewColumn[]
+  x_ranking: number[]
+  y_ranking: number[]
+  recommended_x: number | null
+  recommended_y: number | null
+  headline: string
+  chosen_x: number | null
+  chosen_y: number | null
+  x_scale: number
+  x_unit: string | null
+  y_unit: string | null
+}
+
+export const inflectColumns = {
+  preview: (id: string, file?: string) => get<Preview>(`/sessions/${id}/preview`, { file }),
+}

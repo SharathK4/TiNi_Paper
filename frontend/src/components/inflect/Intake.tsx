@@ -132,7 +132,7 @@ export function Intake({
         )}
         <div className="intake__actions" style={{ animationDelay: `${lines.length * 130 + 120}ms` }}>
           <button className="btn btn--primary" onClick={() => onOpen(sessionId, detail)}>
-            Read the curve
+            Choose what to plot
           </button>
           <button className="btn btn--quiet" onClick={() => { setPhase('idle'); setDetail(null) }}>
             Use different data

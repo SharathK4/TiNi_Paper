@@ -230,6 +230,67 @@ class Session:
             raise ValueError("could not decide which columns to use")
         return xi, yi
 
+    def preview(self, name: str | None = None, points: int = 140) -> dict[str, Any]:
+        """Every column, thinned, so a reader can choose what to plot.
+
+        The tool's own choice of columns is a good default and a bad
+        monopoly: a reader may want any pair, and the only way to decide is
+        to see them. Every column is sampled at the *same* row indices, so
+        the page can draw any column against any other without asking again.
+        """
+        first = name or (self.sources()[0].name if self.sources() else None)
+        if first is None:
+            raise ValueError("session has no files")
+        t = self.table(first)
+        report = analyse_columns(t)
+        cfg = self.config()
+        n = t.n_rows
+        idx = (np.arange(points) * (n - 1) // max(1, points - 1)) if n > points else np.arange(n)
+
+        by_index = {s.index: s for s in report.stats}
+        columns = []
+        for c in t.columns:
+            s = by_index[c.index]
+            values = t.data[idx, c.index]
+            columns.append({
+                "index": c.index,
+                "name": c.name,
+                "unit": c.unit,
+                "label": c.label,
+                "kind": s.kind,
+                "kind_reason": s.kind_reason,
+                "values": [None if not np.isfinite(v) else float(f"{v:.6g}") for v in values],
+                "minimum": s.minimum,
+                "maximum": s.maximum,
+                "monotonic": s.monotonic,
+                "uniform_spacing": s.uniform_spacing,
+                "noise_sigma": s.noise_sigma,
+                "trend_strength": s.trend_strength,
+                "constant": s.constant,
+                "duplicate_of": s.duplicate_of,
+                "x_score": s.x_score,
+                "y_score": s.y_score,
+                "x_reasons": s.x_reasons,
+                "y_reasons": s.y_reasons,
+            })
+
+        return json_safe({
+            "file": first,
+            "n_rows": n,
+            "n_preview": int(len(idx)),
+            "columns": columns,
+            "x_ranking": report.x_ranking,
+            "y_ranking": report.y_ranking,
+            "recommended_x": report.recommended_x,
+            "recommended_y": report.recommended_y,
+            "headline": report.headline,
+            "chosen_x": cfg.x_column,
+            "chosen_y": cfg.y_column,
+            "x_scale": cfg.x_scale,
+            "x_unit": cfg.x_unit,
+            "y_unit": cfg.y_unit,
+        })
+
     def curve(self, name: str, cfg: SessionConfig | None = None) -> dict[str, Any]:
         """Everything the page needs to draw and narrate one file."""
         cfg = cfg or self.config()
